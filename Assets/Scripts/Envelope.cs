@@ -43,10 +43,10 @@ public class Envelope : MonoBehaviour
             {
                 float t = 1.0f / tSectors * tIdx;
                 float a = 1.0f / aSectors * aIdx;
-                Debug.Log("T: " + t + " a:" + a);
 
-                Vector3 vertex = toolPath.Evaluate(t * toolPath.NumSegments) + a * toolHeight * toolAxis;
-                Debug.Log(vertex);
+                Vector3 normal = CalculateNormal(t, a);
+
+                Vector3 vertex = toolPath.Evaluate(t) + a * toolHeight * toolAxis + toolRadius * normal;
                 Vector2 uv = new Vector2(t, a);
 
                 data.AddVertex(vertex, uv, vertexIndex);
@@ -64,5 +64,29 @@ public class Envelope : MonoBehaviour
             }
         }
         return data;
+    }
+
+    // Calculate normal of envelope according to Bassegoda's paper
+    private Vector3 CalculateNormal(float t, float a)
+    {
+        // tool surface derivative wrt a
+        Vector3 sa = toolAxis;
+        // tool surface derivative wrt t
+        Vector3 st = toolPath.EvaluateTangent(t).normalized + a * Vector3.zero; // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        Vector3 sNormal = Vector3.Cross(sa, st).normalized;
+
+        // tool radius derivate wrt a
+        float ra = 0; // Todo replace with actual derivate. Is fixed for now
+        float alpha, beta, gamma;
+        // Determinant of partial derivative matrix
+        float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));
+        float m11 = Vector3.Dot(st, st) / determinant;
+        alpha = m11 * -ra;
+        float m21 = Vector3.Dot(st, sa) / determinant;
+        beta = m21 * -ra;
+        gamma = (determinant > 0 ? -1 : 1) * Mathf.Sqrt(1 - ra * ra * m11);
+
+        Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
+        return envelopeNormal.normalized;
     }
 }

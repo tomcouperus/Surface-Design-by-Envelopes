@@ -46,11 +46,13 @@ public class BezierCurve : MonoBehaviour
         points.Add(anchorPos);
     }
 
+    // Expect t in range of [0, 1]
     public Vector3 Evaluate(float t)
     {
+        t *= NumSegments;
         t = Mathf.Clamp(t, 0, NumSegments);
         // Determine which segment to interpolate based on t
-        int segment = Mathf.Max(Mathf.FloorToInt(t - 0.0001f), 0);
+        int segment = Mathf.Max(Mathf.FloorToInt(t - 0.00001f), 0);
         // Get the decimal part of t
         t -= segment;
 
@@ -60,14 +62,30 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 3] * t * t * t;
     }
 
+    // Expects t in range of [0, 1]
+    public Vector3 EvaluateTangent(float t)
+    {
+        t *= NumSegments;
+        t = Mathf.Clamp(t, 0, NumSegments);
+        // Determine which segment to interpolate based on t
+        int segment = Mathf.Max(Mathf.FloorToInt(t - 0.00001f), 0);
+        // Get the decimal part of t
+        t -= segment;
+
+        return points[segment * 3 + 0] * -3 * (1 - t) * (1 - t) +
+               points[segment * 3 + 1] * (-6 * t * (1 - t) + 3 * (1 - t) * (1 - t)) +
+               points[segment * 3 + 2] * (-3 * t * t + 6 * t * (1 - t)) +
+               points[segment * 3 + 3] * 3 * t * t;
+    }
+
     public void UpdateLineRenderer()
     {
         List<Vector3> renderPoints = new();
 
         float deltaT = 1.0f / resolution;
-        for (int i = 0; i < NumSegments * resolution + 1; i++)
+        for (int i = 0; i <= NumSegments * resolution; i++)
         {
-            renderPoints.Add(Evaluate(i * deltaT));
+            renderPoints.Add(Evaluate(1.0f / (NumSegments * resolution) * i));
         }
 
         lineRenderer.positionCount = renderPoints.Count;
