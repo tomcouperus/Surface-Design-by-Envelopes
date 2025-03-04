@@ -6,9 +6,11 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class BezierCurve : MonoBehaviour
 {
+    [SerializeField]
     private List<Vector3> points;
     private LineRenderer lineRenderer;
     public int resolution = 10;
+    public float lineThickness = 0.1f;
 
     public int NumSegments
     {
@@ -28,6 +30,7 @@ public class BezierCurve : MonoBehaviour
             Vector3.right
         };
 
+        lineRenderer.widthMultiplier = lineThickness;
         UpdateLineRenderer();
     }
 
@@ -45,16 +48,11 @@ public class BezierCurve : MonoBehaviour
 
     public Vector3 Evaluate(float t)
     {
-        Debug.Log("Evaluating point");
-        Debug.Log(t);
         t = Mathf.Clamp(t, 0, NumSegments);
-        Debug.Log(t);
         // Determine which segment to interpolate based on t
         int segment = Mathf.Max(Mathf.FloorToInt(t - 0.0001f), 0);
-        Debug.Log(segment);
         // Get the decimal part of t
         t -= segment;
-        Debug.Log(t);
 
         return points[segment * 3 + 0] * (1 - t) * (1 - t) * (1 - t) +
                points[segment * 3 + 1] * 3 * t * (1 - t) * (1 - t) +
