@@ -30,13 +30,14 @@ public class Envelope : MonoBehaviour
     private void Awake()
     {
         toolPath = GetComponentInChildren<BezierCurve>();
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        mesh = new();
+        meshFilter.mesh = mesh;
     }
 
     private void Start()
     {
-        mesh = GenerateMeshData().CreateMesh();
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        meshFilter.mesh = mesh;
+        UpdateEnvelope();
     }
 
     private MeshData GenerateMeshData()
