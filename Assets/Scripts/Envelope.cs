@@ -6,14 +6,20 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class Envelope : MonoBehaviour
 {
+    [SerializeField]
+    private Mesh mesh;
     [Header("Tool")]
     [SerializeField]
     private Vector3 toolAxis = Vector3.up;
-    private BezierCurve toolPath;
+    public BezierCurve toolPath;
     [SerializeField]
     private float toolRadius = 1.0f;
     [SerializeField]
-    private float toolHeight = 2;
+    public float toolHeight = 2;
+
+    [Header("Constraints")]
+    [SerializeField]
+    private Envelope adjacentEnvelope;
 
     [Header("Render")]
     [SerializeField]
@@ -28,9 +34,9 @@ public class Envelope : MonoBehaviour
 
     private void Start()
     {
+        mesh = GenerateMeshData().CreateMesh();
         MeshFilter meshFilter = GetComponent<MeshFilter>();
-        Mesh mesh = GenerateMeshData().CreateMesh();
-        meshFilter.sharedMesh = mesh;
+        meshFilter.mesh = mesh;
     }
 
     private MeshData GenerateMeshData()
@@ -46,7 +52,7 @@ public class Envelope : MonoBehaviour
 
                 Vector3 normal = CalculateNormal(t, a);
 
-                Vector3 vertex = toolPath.Evaluate(t) + a * toolHeight * toolAxis + toolRadius * normal;
+                Vector3 vertex = GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t) + GetToolRadiusAt(a) * normal;
                 Vector2 uv = new Vector2(t, a);
 
                 data.AddVertex(vertex, uv, vertexIndex);
@@ -66,13 +72,30 @@ public class Envelope : MonoBehaviour
         return data;
     }
 
+    public Vector3 GetToolPathAt(float t)
+    {
+        return toolPath.Evaluate(t);
+
+    }
+
+    public float GetToolRadiusAt(float a)
+    {
+        return toolRadius;
+    }
+
+    public Vector3 GetToolAxisAt(float t)
+    {
+        return toolAxis;
+    }
+
     // Calculate normal of envelope according to Bassegoda's paper
+    // Expects t in [0, 1] and a in [0, 1]
     private Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
         Vector3 sa = toolAxis;
         // tool surface derivative wrt t
-        Vector3 st = toolPath.EvaluateTangent(t).normalized + a * Vector3.zero; // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        Vector3 st = toolPath.EvaluateTangent(t).normalized + a * toolHeight * Vector3.zero; // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
@@ -88,5 +111,27 @@ public class Envelope : MonoBehaviour
 
         Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
         return envelopeNormal.normalized;
+    }
+
+    public void UpdateEnvelope()
+    {
+        if (adjacentEnvelope != null)
+        {
+            // The path of an envelope A adjacent to envelope B is the same as B's, but just translated a bit.
+            toolPath.points.Clear();
+            toolPath.points.AddRange(adjacentEnvelope.toolPath.points);
+            // Place the path points in the right position
+            for (int i = 0; i < toolPath.points.Count; i++)
+            {
+                float t = (float)i / toolPath.points.Count;
+                toolPath.points[i] += adjacentEnvelope.GetToolAxisAt(t) * adjacentEnvelope.toolHeight +
+                                      adjacentEnvelope.GetToolRadiusAt(1.0f) * adjacentEnvelope.CalculateNormal(t, 1.0f) -
+                                      GetToolRadiusAt(0.0f) * CalculateNormal(t, 0.0f);
+            }
+        }
+
+        toolPath.UpdateLineRenderer();
+        // Recreate the envelope's mesh
+        GenerateMeshData().CreateMesh(mesh);
     }
 }

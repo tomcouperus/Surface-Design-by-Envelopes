@@ -34,10 +34,15 @@ public class MeshData
     public Mesh CreateMesh()
     {
         Mesh mesh = new Mesh();
+        CreateMesh(mesh);
+        return mesh;
+    }
+
+    public void CreateMesh(Mesh mesh)
+    {
         mesh.SetVertices(vertices);
         mesh.SetTriangles(triangles, 0);
         mesh.SetUVs(0, uvs);
         mesh.RecalculateNormals();
-        return mesh;
     }
 }

@@ -7,7 +7,7 @@ using UnityEngine;
 public class BezierCurve : MonoBehaviour
 {
     [SerializeField]
-    private List<Vector3> points;
+    public List<Vector3> points;
     private LineRenderer lineRenderer;
     public int resolution = 10;
     public float lineThickness = 0.1f;
