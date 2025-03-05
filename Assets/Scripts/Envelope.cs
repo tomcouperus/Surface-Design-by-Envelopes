@@ -76,7 +76,11 @@ public class Envelope : MonoBehaviour
     public Vector3 GetToolPathAt(float t)
     {
         return toolPath.Evaluate(t);
+    }
 
+    public Vector3 GetToolPathTangentAt(float t)
+    {
+        return toolPath.EvaluateTangent(t);
     }
 
     public float GetToolRadiusAt(float a)
@@ -84,9 +88,21 @@ public class Envelope : MonoBehaviour
         return toolRadius;
     }
 
+    public float GetRadiusDerivateAt(float a)
+    {
+        // Todo replace with actual derivate. Is fixed for now
+        return 0;
+    }
+
     public Vector3 GetToolAxisAt(float t)
     {
         return toolAxis;
+    }
+
+    public Vector3 GetToolAxisDerivativeAt(float t)
+    {
+        // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        return Vector3.zero;
     }
 
     // Calculate normal of envelope according to Bassegoda's paper
@@ -94,13 +110,13 @@ public class Envelope : MonoBehaviour
     private Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
-        Vector3 sa = toolAxis;
+        Vector3 sa = GetToolAxisAt(t);
         // tool surface derivative wrt t
-        Vector3 st = toolPath.EvaluateTangent(t).normalized + a * toolHeight * Vector3.zero; // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        Vector3 st = GetToolPathTangentAt(t).normalized + a * toolHeight * GetToolAxisDerivativeAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
-        float ra = 0; // Todo replace with actual derivate. Is fixed for now
+        float ra = GetRadiusDerivateAt(a);
         float alpha, beta, gamma;
         // Determinant of partial derivative matrix
         float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));
