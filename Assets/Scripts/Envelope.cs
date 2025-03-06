@@ -11,11 +11,11 @@ public class Envelope : MonoBehaviour
     [Header("Tool")]
     [SerializeField]
     private Vector3 toolAxis = Vector3.up;
-    public BezierCurve toolPath;
+    private BezierCurve toolPath;
     [SerializeField]
     private float toolRadius = 1.0f;
     [SerializeField]
-    public float toolHeight = 2;
+    private float toolHeight = 2;
 
     [Header("Constraints")]
     [SerializeField]
@@ -37,6 +37,9 @@ public class Envelope : MonoBehaviour
 
     private void Start()
     {
+        transform.localPosition -= transform.localPosition;
+
+        UpdatePath();
         UpdateEnvelope();
     }
 
@@ -106,7 +109,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisAt(float t)
     {
-        return toolAxis;
+        return toolAxis.normalized;
     }
 
     public Vector3 GetToolAxisDerivativeAt(float t)
@@ -117,7 +120,7 @@ public class Envelope : MonoBehaviour
 
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
-    private Vector3 CalculateNormal(float t, float a)
+    public Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
         Vector3 sa = GetToolAxisAt(t);

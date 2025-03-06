@@ -7,7 +7,7 @@ using UnityEngine;
 public class BezierCurve : MonoBehaviour
 {
     [SerializeField]
-    public List<Vector3> points;
+    private List<Vector3> points;
     private LineRenderer lineRenderer;
     public int resolution = 10;
     public float lineThickness = 0.1f;
@@ -20,21 +20,23 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
-    [SerializeField]
-    [Range(0, 1)]
-    private float t;
+    private bool showControlPoints = true;
 
-    float tb = 1.0f / 3;
-    float tc = 2.0f / 3;
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
+
         points = new List<Vector3>{
             Vector3.left,
             (Vector3.left + Vector3.up)/2,
             (Vector3.right + Vector3.down)/2,
             Vector3.right
         };
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            points[i] += transform.position;
+        }
 
         lineRenderer.widthMultiplier = lineThickness;
         UpdateLineRenderer();
@@ -94,23 +96,28 @@ public class BezierCurve : MonoBehaviour
         }
 
         UpdateLineRenderer(renderPoints);
+        showControlPoints = true;
     }
 
     public void UpdateLineRenderer(List<Vector3> points)
     {
         lineRenderer.positionCount = points.Count;
         lineRenderer.SetPositions(points.ToArray());
+        showControlPoints = false;
     }
 
     private void OnDrawGizmosSelected()
     {
-        for (int i = 0; i < points.Count; i++)
+        if (showControlPoints)
         {
-            Gizmos.DrawSphere(points[i], 0.05f);
-        }
-        for (int i = 0; i < points.Count - 1; i++)
-        {
-            Gizmos.DrawLine(points[i], points[i + 1]);
+            for (int i = 0; i < points.Count; i++)
+            {
+                Gizmos.DrawSphere(points[i], 0.05f);
+            }
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Gizmos.DrawLine(points[i], points[i + 1]);
+            }
         }
     }
 
