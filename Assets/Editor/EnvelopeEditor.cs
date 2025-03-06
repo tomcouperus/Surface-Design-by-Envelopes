@@ -22,6 +22,7 @@ public class EnvelopeEditor : Editor
 
         if (GUILayout.Button(updateButton))
         {
+            envelope.UpdatePath();
             envelope.UpdateEnvelope();
         }
     }

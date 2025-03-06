@@ -42,14 +42,15 @@ public class Envelope : MonoBehaviour
 
     private MeshData GenerateMeshData()
     {
+        Debug.Log("Generating mesh for " + gameObject.name);
         int vertexIndex = 0;
         MeshData data = new MeshData(tSectors + 1, aSectors + 1);
         for (int tIdx = 0; tIdx <= tSectors; tIdx++)
         {
             for (int aIdx = 0; aIdx <= aSectors; aIdx++)
             {
-                float t = 1.0f / tSectors * tIdx;
-                float a = 1.0f / aSectors * aIdx;
+                float t = (float)tIdx / tSectors;
+                float a = (float)aIdx / aSectors;
 
                 Vector3 normal = CalculateNormal(t, a);
 
@@ -75,7 +76,16 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolPathAt(float t)
     {
-        return toolPath.Evaluate(t);
+        if (adjacentEnvelope != null)
+        {
+            return adjacentEnvelope.GetToolPathAt(t) + adjacentEnvelope.GetToolAxisAt(t) * adjacentEnvelope.toolHeight +
+                   adjacentEnvelope.GetToolRadiusAt(1) * adjacentEnvelope.CalculateNormal(t, 1) -
+                   GetToolRadiusAt(0) * CalculateNormal(t, 0);
+        }
+        else
+        {
+            return toolPath.Evaluate(t);
+        }
     }
 
     public Vector3 GetToolPathTangentAt(float t)
@@ -132,23 +142,30 @@ public class Envelope : MonoBehaviour
 
     public void UpdateEnvelope()
     {
+        GenerateMeshData().CreateMesh(mesh);
+    }
+
+    public void UpdatePath()
+    {
         if (adjacentEnvelope != null)
         {
-            // The path of an envelope A adjacent to envelope B is the same as B's, but just translated a bit.
-            toolPath.points.Clear();
-            toolPath.points.AddRange(adjacentEnvelope.toolPath.points);
-            // Place the path points in the right position
-            for (int i = 0; i < toolPath.points.Count; i++)
+            List<Vector3> pathPoints = new();
+            for (int tIdx = 0; tIdx <= tSectors; tIdx++)
             {
-                float t = (float)i / toolPath.points.Count;
-                toolPath.points[i] += adjacentEnvelope.GetToolAxisAt(t) * adjacentEnvelope.toolHeight +
-                                      adjacentEnvelope.GetToolRadiusAt(1.0f) * adjacentEnvelope.CalculateNormal(t, 1.0f) -
-                                      GetToolRadiusAt(0.0f) * CalculateNormal(t, 0.0f);
+                float t = (float)tIdx / tSectors;
+                pathPoints.Add(GetToolPathAt(t));
             }
+            toolPath.UpdateLineRenderer(pathPoints);
         }
+        else
+        {
+            toolPath.resolution = tSectors;
+            toolPath.UpdateLineRenderer();
+        }
+    }
 
-        toolPath.UpdateLineRenderer();
-        // Recreate the envelope's mesh
-        GenerateMeshData().CreateMesh(mesh);
+    private void OnValidate()
+    {
+        if (adjacentEnvelope == this) adjacentEnvelope = null;
     }
 }

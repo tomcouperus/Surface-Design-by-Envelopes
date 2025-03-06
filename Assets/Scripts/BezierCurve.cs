@@ -20,6 +20,12 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    [Range(0, 1)]
+    private float t;
+
+    float tb = 1.0f / 3;
+    float tc = 2.0f / 3;
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
@@ -82,14 +88,30 @@ public class BezierCurve : MonoBehaviour
     {
         List<Vector3> renderPoints = new();
 
-        float deltaT = 1.0f / resolution;
         for (int i = 0; i <= NumSegments * resolution; i++)
         {
             renderPoints.Add(Evaluate(1.0f / (NumSegments * resolution) * i));
         }
 
-        lineRenderer.positionCount = renderPoints.Count;
-        lineRenderer.SetPositions(renderPoints.ToArray());
+        UpdateLineRenderer(renderPoints);
+    }
+
+    public void UpdateLineRenderer(List<Vector3> points)
+    {
+        lineRenderer.positionCount = points.Count;
+        lineRenderer.SetPositions(points.ToArray());
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        for (int i = 0; i < points.Count; i++)
+        {
+            Gizmos.DrawSphere(points[i], 0.05f);
+        }
+        for (int i = 0; i < points.Count - 1; i++)
+        {
+            Gizmos.DrawLine(points[i], points[i + 1]);
+        }
     }
 
 }

@@ -10,6 +10,7 @@ public class BezierCurveEditor : Editor
 
 
     private GUIContent addSegmentButton = new GUIContent("Add Segment");
+    private GUIContent updateButton = new GUIContent("Update");
 
     private void OnEnable()
     {
@@ -20,9 +21,14 @@ public class BezierCurveEditor : Editor
     {
         base.OnInspectorGUI();
 
-        if (GUILayout.Button(addSegmentButton))
+        // if (GUILayout.Button(addSegmentButton))
+        // {
+        //     bezierCurve.AddSegment(new Vector3(2, -2, 0));
+        //     bezierCurve.UpdateLineRenderer();
+        // }
+
+        if (GUILayout.Button(updateButton))
         {
-            bezierCurve.AddSegment(new Vector3(2, -2, 0));
             bezierCurve.UpdateLineRenderer();
         }
     }
