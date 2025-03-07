@@ -27,6 +27,8 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     private int aSectors = 20;
 
+    public bool IsPositionContinuous { get { return adjacentEnvelope != null; } }
+
     private void Awake()
     {
         toolPath = GetComponentInChildren<BezierCurve>();
@@ -79,7 +81,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolPathAt(float t)
     {
-        if (adjacentEnvelope != null)
+        if (IsPositionContinuous)
         {
             return adjacentEnvelope.GetToolPathAt(t) + adjacentEnvelope.GetToolAxisAt(t) * adjacentEnvelope.toolHeight +
                    adjacentEnvelope.GetToolRadiusAt(1) * adjacentEnvelope.CalculateNormal(t, 1) -
@@ -135,9 +137,9 @@ public class Envelope : MonoBehaviour
         float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));
         float m11 = Vector3.Dot(st, st) / determinant;
         alpha = m11 * -ra;
-        float m21 = Vector3.Dot(st, sa) / determinant;
+        float m21 = -Vector3.Dot(st, sa) / determinant;
         beta = m21 * -ra;
-        gamma = (determinant > 0 ? -1 : 1) * Mathf.Sqrt(1 - ra * ra * m11);
+        gamma = (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
 
         Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
         return envelopeNormal.normalized;
@@ -150,7 +152,7 @@ public class Envelope : MonoBehaviour
 
     public void UpdatePath()
     {
-        if (adjacentEnvelope != null)
+        if (IsPositionContinuous)
         {
             List<Vector3> pathPoints = new();
             for (int tIdx = 0; tIdx <= tSectors; tIdx++)
