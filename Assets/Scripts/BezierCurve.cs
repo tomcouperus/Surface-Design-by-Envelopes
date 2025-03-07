@@ -28,8 +28,8 @@ public class BezierCurve : MonoBehaviour
 
         points = new List<Vector3>{
             Vector3.left,
-            (Vector3.left + Vector3.up)/2,
-            (Vector3.right + Vector3.down)/2,
+            Vector3.left/2,
+            Vector3.right/2,
             Vector3.right
         };
 
