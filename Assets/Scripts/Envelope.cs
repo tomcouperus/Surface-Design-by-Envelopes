@@ -95,7 +95,14 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolPathTangentAt(float t)
     {
-        return toolPath.EvaluateTangent(t);
+        if (IsPositionContinuous)
+        {
+            return adjacentEnvelope.toolPath.EvaluateTangent(t);
+        }
+        else
+        {
+            return toolPath.EvaluateTangent(t);
+        }
     }
 
     public float GetToolRadiusAt(float a)

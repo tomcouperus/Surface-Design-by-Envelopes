@@ -852,7 +852,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: 0.2}
+  toolAxis: {x: 0, y: 1, z: 0}
   toolRadius: 1
   toolHeight: 2
   adjacentEnvelope: {fileID: 0}
