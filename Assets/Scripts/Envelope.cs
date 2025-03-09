@@ -10,7 +10,9 @@ public class Envelope : MonoBehaviour
     private Mesh mesh;
     [Header("Tool")]
     [SerializeField]
-    private Vector3 toolAxis = Vector3.up;
+    private Vector3 toolAxisT0 = Vector3.up;
+    [SerializeField]
+    private Vector3 toolAxisT1 = Vector3.up + Vector3.forward / 2;
     private BezierCurve toolPath;
     [SerializeField]
     private float toolRadius = 1.0f;
@@ -19,7 +21,9 @@ public class Envelope : MonoBehaviour
 
     [Header("Constraints")]
     [SerializeField]
-    private Envelope adjacentEnvelope;
+    private Envelope adjacentEnvelopeA0;
+    [SerializeField]
+    private Envelope adjacentEnvelopeA1;
 
     [Header("Render")]
     [SerializeField]
@@ -27,7 +31,8 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     private int aSectors = 20;
 
-    public bool IsPositionContinuous { get { return adjacentEnvelope != null; } }
+    public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
+    public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
 
     private void Awake()
     {
@@ -57,9 +62,7 @@ public class Envelope : MonoBehaviour
                 float t = (float)tIdx / tSectors;
                 float a = (float)aIdx / aSectors;
 
-                Vector3 normal = CalculateNormal(t, a);
-
-                Vector3 vertex = GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t) + GetToolRadiusAt(a) * normal;
+                Vector3 vertex = GetEnvelopeAt(t, a);
                 Vector2 uv = new Vector2(t, a);
 
                 data.AddVertex(vertex, uv, vertexIndex);
@@ -79,12 +82,17 @@ public class Envelope : MonoBehaviour
         return data;
     }
 
+    public Vector3 GetEnvelopeAt(float t, float a)
+    {
+        return GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t) + GetToolRadiusAt(a) * CalculateNormal(t, a);
+    }
+
     public Vector3 GetToolPathAt(float t)
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelope.GetToolPathAt(t) + adjacentEnvelope.GetToolAxisAt(t) * adjacentEnvelope.toolHeight +
-                   adjacentEnvelope.GetToolRadiusAt(1) * adjacentEnvelope.CalculateNormal(t, 1) -
+            return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) * adjacentEnvelopeA0.toolHeight +
+                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal(t, 1) -
                    GetToolRadiusAt(0) * CalculateNormal(t, 0);
         }
         else
@@ -97,7 +105,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelope.toolPath.EvaluateTangent(t);
+            return adjacentEnvelopeA0.toolPath.EvaluateTangent(t);
         }
         else
         {
@@ -118,7 +126,12 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisAt(float t)
     {
-        return toolAxis.normalized;
+        Vector3 axis = toolAxisT0.normalized;
+        if (IsAxisConstrained)
+        {
+            axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+        }
+        return axis.normalized;
     }
 
     public Vector3 GetToolAxisDerivativeAt(float t)
@@ -132,7 +145,7 @@ public class Envelope : MonoBehaviour
     public Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
-        Vector3 sa = GetToolAxisAt(t);
+        Vector3 sa = toolHeight * GetToolAxisAt(t);
         // tool surface derivative wrt t
         Vector3 st = GetToolPathTangentAt(t).normalized + a * toolHeight * GetToolAxisDerivativeAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
@@ -178,6 +191,7 @@ public class Envelope : MonoBehaviour
 
     private void OnValidate()
     {
-        if (adjacentEnvelope == this) adjacentEnvelope = null;
+        if (adjacentEnvelopeA0 == this) adjacentEnvelopeA0 = null;
+        if (adjacentEnvelopeA1 == this || adjacentEnvelopeA1 == adjacentEnvelopeA0) adjacentEnvelopeA1 = null;
     }
 }

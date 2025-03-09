@@ -426,7 +426,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: 0}
+  toolAxis: {x: 0, y: 1, z: 0.5}
   toolRadius: 1
   toolHeight: 2
   adjacentEnvelope: {fileID: 0}
@@ -852,7 +852,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: 0}
+  toolAxis: {x: 0, y: 1, z: -0.5}
   toolRadius: 1
   toolHeight: 2
   adjacentEnvelope: {fileID: 0}
@@ -917,7 +917,7 @@ Transform:
   m_GameObject: {fileID: 1749886488}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4, z: 0}
+  m_LocalPosition: {x: 0, y: 4.6832814, z: 0.8944272}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
