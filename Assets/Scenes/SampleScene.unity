@@ -154,10 +154,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: 0}
+  toolAxisT0: {x: 0, y: 1, z: 0}
+  toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 1
   toolHeight: 2
-  adjacentEnvelope: {fileID: 637717021}
+  adjacentEnvelopeA0: {fileID: 637717021}
+  adjacentEnvelopeA1: {fileID: 0}
   tSectors: 50
   aSectors: 20
 --- !u!33 &201796170
@@ -426,10 +428,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: 0.5}
+  toolAxisT0: {x: 0, y: 1, z: 0}
+  toolAxisT1: {x: 0, y: 1, z: 0.5}
   toolRadius: 1
   toolHeight: 2
-  adjacentEnvelope: {fileID: 0}
+  adjacentEnvelopeA0: {fileID: 0}
+  adjacentEnvelopeA1: {fileID: 0}
   tSectors: 50
   aSectors: 20
 --- !u!33 &637717022
@@ -852,10 +856,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxis: {x: 0, y: 1, z: -0.5}
+  toolAxisT0: {x: 0, y: 1, z: 0}
+  toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 1
   toolHeight: 2
-  adjacentEnvelope: {fileID: 0}
+  adjacentEnvelopeA0: {fileID: 201796169}
+  adjacentEnvelopeA1: {fileID: 0}
   tSectors: 50
   aSectors: 20
 --- !u!33 &1749886490

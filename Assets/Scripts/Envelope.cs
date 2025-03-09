@@ -126,7 +126,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisAt(float t)
     {
-        Vector3 axis = toolAxisT0.normalized;
+        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t).normalized;
         if (IsAxisConstrained)
         {
             axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
