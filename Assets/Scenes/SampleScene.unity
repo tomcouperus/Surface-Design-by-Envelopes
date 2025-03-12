@@ -154,8 +154,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  toolAxisT0: {x: 0, y: 1, z: 0}
-  toolAxisT1: {x: 0, y: 1, z: 0}
+  toolAxisT0: {x: 0, y: 1, z: -0.2}
+  toolAxisT1: {x: 0, y: 1, z: -0.2}
   toolRadius: 1
   toolHeight: 2
   adjacentEnvelopeA0: {fileID: 637717021}
@@ -429,7 +429,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
-  toolAxisT1: {x: 0, y: 1, z: 0.5}
+  toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 1
   toolHeight: 2
   adjacentEnvelopeA0: {fileID: 0}
@@ -860,7 +860,7 @@ MonoBehaviour:
   toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 1
   toolHeight: 2
-  adjacentEnvelopeA0: {fileID: 201796169}
+  adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
   tSectors: 50
   aSectors: 20
@@ -923,7 +923,7 @@ Transform:
   m_GameObject: {fileID: 1749886488}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4.6832814, z: 0.8944272}
+  m_LocalPosition: {x: 0, y: 4.236068, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

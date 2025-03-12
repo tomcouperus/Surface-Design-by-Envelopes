@@ -167,6 +167,7 @@ public class Envelope : MonoBehaviour
 
     public void UpdateEnvelope()
     {
+        CheckConstraints();
         GenerateMeshData().CreateMesh(mesh);
     }
 
@@ -186,6 +187,24 @@ public class Envelope : MonoBehaviour
         {
             toolPath.resolution = tSectors;
             toolPath.UpdateLineRenderer();
+        }
+    }
+
+    public void CheckConstraints()
+    {
+        // Check distance between envelopes
+        if (IsAxisConstrained)
+        {
+            for (int tIdx = 0; tIdx <= tSectors; tIdx++)
+            {
+                float t = (float)tIdx / tSectors;
+                Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                if (axis.sqrMagnitude < 0 || axis.sqrMagnitude > toolHeight * toolHeight)
+                {
+                    Debug.LogWarning(gameObject.name + ": Constraining envelopes too far apart.");
+                    break;
+                }
+            }
         }
     }
 
