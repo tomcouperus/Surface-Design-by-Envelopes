@@ -160,7 +160,7 @@ public class Envelope : MonoBehaviour
         alpha = m11 * -ra;
         float m21 = -Vector3.Dot(st, sa) / determinant;
         beta = m21 * -ra;
-        gamma = (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        gamma = -1 * (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
 
         Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
         return envelopeNormal.normalized;
