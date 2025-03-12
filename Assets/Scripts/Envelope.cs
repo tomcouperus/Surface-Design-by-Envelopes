@@ -79,6 +79,7 @@ public class Envelope : MonoBehaviour
                 vertexIndex++;
             }
         }
+        // data.MakeDoubleSided();
         return data;
     }
 
