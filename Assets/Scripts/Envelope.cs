@@ -18,6 +18,7 @@ public class Envelope : MonoBehaviour
     private float toolRadius = 1.0f;
     [SerializeField]
     private float toolHeight = 2;
+    private Tool tool;
 
     [Header("Constraints")]
     [SerializeField]
@@ -30,6 +31,9 @@ public class Envelope : MonoBehaviour
     private int tSectors = 50;
     [SerializeField]
     private int aSectors = 20;
+    [SerializeField]
+    [Range(0, 1)]
+    private float t = 0;
 
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
@@ -37,6 +41,8 @@ public class Envelope : MonoBehaviour
     private void Awake()
     {
         toolPath = GetComponentInChildren<BezierCurve>();
+        tool = GetComponentInChildren<Tool>();
+
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         mesh = new();
         meshFilter.mesh = mesh;
@@ -48,6 +54,12 @@ public class Envelope : MonoBehaviour
 
         UpdatePath();
         UpdateEnvelope();
+    }
+
+    void Update()
+    {
+        tool.transform.localPosition = GetToolPathAt(t);
+        tool.transform.rotation = Quaternion.LookRotation(GetToolPathTangentAt(t), GetToolAxisAt(t));
     }
 
     private MeshData GenerateMeshData()
