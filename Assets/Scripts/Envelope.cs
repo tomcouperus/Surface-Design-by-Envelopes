@@ -16,8 +16,8 @@ public class Envelope : MonoBehaviour
     private BezierCurve toolPath;
     [SerializeField]
     private float toolRadius = 1.0f;
-    [SerializeField]
-    private float toolHeight = 2;
+    // [SerializeField]
+    // private float toolHeight = 2;
     private Tool tool;
 
     [Header("Constraints")]
@@ -25,6 +25,8 @@ public class Envelope : MonoBehaviour
     private Envelope adjacentEnvelopeA0;
     [SerializeField]
     private Envelope adjacentEnvelopeA1;
+    [SerializeField]
+    public bool perfectFit = false;
 
     [Header("Render")]
     [SerializeField]
@@ -58,8 +60,9 @@ public class Envelope : MonoBehaviour
 
     void Update()
     {
+        if (perfectFit) return;
         tool.transform.localPosition = GetToolPathAt(t);
-        tool.transform.rotation = Quaternion.LookRotation(GetToolPathTangentAt(t), GetToolAxisAt(t));
+        tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
     }
 
     private MeshData GenerateMeshData()
@@ -97,14 +100,14 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetEnvelopeAt(float t, float a)
     {
-        return GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t) + GetToolRadiusAt(a) * CalculateNormal(t, a);
+        return GetToolPathAt(t) + a /* * toolHeight */ * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
     }
 
     public Vector3 GetToolPathAt(float t)
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) * adjacentEnvelopeA0.toolHeight +
+            return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) /* * adjacentEnvelopeA0.toolHeight */ +
                    adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal(t, 1) -
                    GetToolRadiusAt(0) * CalculateNormal(t, 0);
         }
@@ -142,15 +145,82 @@ public class Envelope : MonoBehaviour
         Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t).normalized;
         if (IsAxisConstrained)
         {
-            axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            if (perfectFit)
+            {
+                axis = perfectFitToolAxes[(int)(t * tSectors)];
+            }
+            else
+            {
+                axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            }
         }
         return axis.normalized;
+    }
+
+    private Vector3[] perfectFitToolAxes;
+    public void CalculatePerfectFitToolAxes()
+    {
+        perfectFitToolAxes = new Vector3[tSectors + 1];
+        float sPrevious = 0;
+        for (int tIdx = 0; tIdx <= tSectors; tIdx++)
+        {
+            if (sPrevious > 1)
+            {
+                Debug.LogError("Unable to find perfectly fitting axes");
+                break;
+            }
+            float s = sPrevious;
+            float t = (float)tIdx / tSectors;
+            Debug.Log("T: " + t);
+            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt(s, 0);
+            float d = 1;
+            float sqrDiff = (x3 - x1).sqrMagnitude - d * d;
+            float deltaS = 1.0f / (tSectors * 50);
+            while (s <= 1)
+            {
+                Debug.Log(sqrDiff);
+                if (sqrDiff < 1e-5)
+                {
+                    Debug.Log("s:" + s + (x3 - x1));
+                    perfectFitToolAxes[tIdx] = x3 - x1;
+                    sPrevious = s;
+                    break;
+                }
+                x3 = adjacentEnvelopeA1.GetEnvelopeAt(s + deltaS, 0);
+                sqrDiff = (x3 - x1).sqrMagnitude - d * d;
+                s += deltaS;
+            }
+        }
     }
 
     public Vector3 GetToolAxisDerivativeAt(float t)
     {
         // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        return GetToolAxisAt(1) - GetToolAxisAt(0);
+        // return Vector3.zero;
+    }
+
+    public Vector3 GetToolAxisSecondDerivativeAt(float t)
+    {
         return Vector3.zero;
+    }
+
+    public Vector3 CalculateNormal_Rajain(float t, float a)
+    {
+        float deltaR = GetToolRadiusAt(1) - GetToolRadiusAt(0);
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 st = GetToolPathTangentAt(t) + a * GetToolAxisDerivativeAt(t);
+        // First fundamental form
+        float E = Vector3.Dot(sa, sa);
+        float F = Vector3.Dot(sa, st);
+        float G = Vector3.Dot(st, st);
+        // Debug.Log("E: " + E.ToString("F2") + " -- F: " + F.ToString("F2") + " -- G: " + G.ToString("F2"));
+
+        // Calculate the normal
+        Vector3 normal = (deltaR * (G * sa - F * st) + Vector3.Cross(sa, st) * Mathf.Sqrt((E - deltaR * deltaR) * G - F * F)) /
+                         (E * G - F * F);
+        return normal.normalized;
     }
 
     // Calculate normal of envelope according to Bassegoda's paper
@@ -158,9 +228,9 @@ public class Envelope : MonoBehaviour
     public Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
-        Vector3 sa = toolHeight * GetToolAxisAt(t);
+        Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
         // tool surface derivative wrt t
-        Vector3 st = GetToolPathTangentAt(t).normalized + a * toolHeight * GetToolAxisDerivativeAt(t);
+        Vector3 st = GetToolPathTangentAt(t).normalized + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
@@ -180,6 +250,7 @@ public class Envelope : MonoBehaviour
 
     public void UpdateEnvelope()
     {
+        // if (perfectFit) CalculatePerfectFitToolAxes();
         CheckConstraints();
         GenerateMeshData().CreateMesh(mesh);
     }
@@ -208,15 +279,19 @@ public class Envelope : MonoBehaviour
         // Check distance between envelopes
         if (IsAxisConstrained)
         {
+            float distance = 0;
             for (int tIdx = 0; tIdx <= tSectors; tIdx++)
             {
                 float t = (float)tIdx / tSectors;
                 Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-                if (axis.sqrMagnitude < 0 || axis.sqrMagnitude > toolHeight * toolHeight)
+                if (axis.sqrMagnitude > 1 + 1e-5/* toolHeight * toolHeight */)
                 {
-                    Debug.LogWarning(gameObject.name + ": Constraining envelopes too far apart.");
-                    break;
+                    distance = Mathf.Max(distance, axis.magnitude - 1);
                 }
+            }
+            if (distance > 0)
+            {
+                Debug.LogWarning(gameObject.name + ": Constraining envelopes too far apart by " + distance);
             }
         }
     }

@@ -28,10 +28,14 @@ public class BezierCurve : MonoBehaviour
 
         points = new List<Vector3>{
             Vector3.left,
-            Vector3.left/2,
-            Vector3.right/2,
+            Vector3.left/3,
+            Vector3.right/3,
             Vector3.right
         };
+        if (GetComponentInParent<Envelope>()?.gameObject.name == "Envelope 3")
+        {
+            for (int i = 0; i < points.Count; i++) points[i] -= new Vector3(0, 0.1f * i, 0);
+        }
 
         for (int i = 0; i < points.Count; i++)
         {
@@ -84,6 +88,21 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 1] * (-6 * t * (1 - t) + 3 * (1 - t) * (1 - t)) +
                points[segment * 3 + 2] * (-3 * t * t + 6 * t * (1 - t)) +
                points[segment * 3 + 3] * 3 * t * t;
+    }
+
+    public Vector3 EvaluateSecondDerivate(float t)
+    {
+        t *= NumSegments;
+        t = Mathf.Clamp(t, 0, NumSegments);
+        // Determine which segment to interpolate based on t
+        int segment = Mathf.Max(Mathf.FloorToInt(t - 0.00001f), 0);
+        // Get the decimal part of t
+        t -= segment;
+
+        return points[segment * 3 + 0] * 6 * (1 - t) +
+               points[segment * 3 + 1] * (-12 * (1 - t) + 6 * t) +
+               points[segment * 3 + 2] * (6 * (1 - t) - 12 * t) +
+               points[segment * 3 + 3] * 6 * t;
     }
 
     public void UpdateLineRenderer()
