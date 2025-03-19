@@ -185,7 +185,7 @@ GameObject:
   - component: {fileID: 201796170}
   - component: {fileID: 201796169}
   m_Layer: 0
-  m_Name: Envelope 2
+  m_Name: Envelope Joiner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1434,7 +1434,7 @@ GameObject:
   - component: {fileID: 1749886490}
   - component: {fileID: 1749886489}
   m_Layer: 0
-  m_Name: Envelope 3
+  m_Name: Envelope Perfect Fit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1542,12 +1542,12 @@ GameObject:
   - component: {fileID: 1785951852}
   - component: {fileID: 1785951851}
   m_Layer: 0
-  m_Name: Envelope 4
+  m_Name: Envelope Planar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1785951851
 MonoBehaviour:
   m_ObjectHideFlags: 0

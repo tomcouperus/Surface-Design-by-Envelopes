@@ -32,7 +32,7 @@ public class BezierCurve : MonoBehaviour
             Vector3.right/3,
             Vector3.right
         };
-        if (GetComponentInParent<Envelope>()?.gameObject.name == "Envelope 3")
+        if (GetComponentInParent<Envelope>()?.gameObject.name == "Envelope Perfect Fit")
         {
             for (int i = 0; i < points.Count; i++) points[i] -= new Vector3(0, 0.1f * i, 0);
         }

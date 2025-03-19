@@ -60,7 +60,7 @@ public class Envelope : MonoBehaviour
 
     void Update()
     {
-        if (perfectFit) return;
+        if (perfectFit && perfectFitToolAxes == null) return;
         tool.transform.localPosition = GetToolPathAt(t);
         tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
     }
@@ -250,7 +250,6 @@ public class Envelope : MonoBehaviour
 
     public void UpdateEnvelope()
     {
-        // if (perfectFit) CalculatePerfectFitToolAxes();
         CheckConstraints();
         GenerateMeshData().CreateMesh(mesh);
     }
