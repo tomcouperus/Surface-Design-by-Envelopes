@@ -32,9 +32,11 @@ public class BezierCurve : MonoBehaviour
             Vector3.right/3,
             Vector3.right
         };
-        if (GetComponentInParent<Envelope>()?.gameObject.name == "Envelope Perfect Fit")
+        string parentName = GetComponentInParent<Envelope>()?.gameObject.name;
+        for (int i = 0; i < points.Count; i++)
         {
-            for (int i = 0; i < points.Count; i++) points[i] -= new Vector3(0, 0.1f * i, 0);
+            if (parentName == "Envelope Perfect Fit") points[i] -= new Vector3(0, 0.1f * i, 0);
+            else if (parentName == "Envelope Curve Base") points[i] += new Vector3(0, 0, (Mathf.Pow(2.0f, i) - 1) / 10);
         }
 
         for (int i = 0; i < points.Count; i++)

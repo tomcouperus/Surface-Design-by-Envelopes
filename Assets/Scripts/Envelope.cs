@@ -171,7 +171,6 @@ public class Envelope : MonoBehaviour
             }
             float s = sPrevious;
             float t = (float)tIdx / tSectors;
-            Debug.Log("T: " + t);
             Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
             Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt(s, 0);
             float d = 1;
@@ -182,7 +181,6 @@ public class Envelope : MonoBehaviour
                 Debug.Log(sqrDiff);
                 if (sqrDiff < 1e-5)
                 {
-                    Debug.Log("s:" + s + (x3 - x1));
                     perfectFitToolAxes[tIdx] = x3 - x1;
                     sPrevious = s;
                     break;
