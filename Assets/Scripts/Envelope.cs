@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -36,6 +37,8 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     [Range(0, 1)]
     private float t = 0;
+    [SerializeField]
+    private bool showTool = true;
 
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
@@ -60,6 +63,13 @@ public class Envelope : MonoBehaviour
 
     void Update()
     {
+        UpdateTool();
+    }
+
+    private void UpdateTool()
+    {
+        tool.gameObject.SetActive(showTool);
+        if (!showTool) return;
         if (perfectFit && perfectFitToolAxes == null) return;
         tool.transform.localPosition = GetToolPathAt(t);
         tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
@@ -103,6 +113,11 @@ public class Envelope : MonoBehaviour
         return GetToolPathAt(t) + a /* * toolHeight */ * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
     }
 
+    public Vector3 GetEnvelopeDerivativeTAt(float t, float a)
+    {
+        return GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t) - GetToolRadiusAt(a) * CalculateNormalDerivativeT_Rajain(t, a);
+    }
+
     public Vector3 GetToolPathAt(float t)
     {
         if (IsPositionContinuous)
@@ -117,15 +132,27 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    public Vector3 GetToolPathTangentAt(float t)
+    public Vector3 GetToolPathDerivativeAt(float t)
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.toolPath.EvaluateTangent(t);
+            return adjacentEnvelopeA0.GetToolPathDerivativeAt(t);
         }
         else
         {
             return toolPath.EvaluateTangent(t);
+        }
+    }
+
+    public Vector3 GetToolPathSecondDerivativeAt(float t)
+    {
+        if (IsPositionContinuous)
+        {
+            return adjacentEnvelopeA0.GetToolPathSecondDerivativeAt(t);
+        }
+        else
+        {
+            return toolPath.EvaluateSecondDerivative(t);
         }
     }
 
@@ -155,6 +182,23 @@ public class Envelope : MonoBehaviour
             }
         }
         return axis.normalized;
+    }
+
+    public Vector3 GetToolAxisDerivativeAt(float t)
+    {
+        // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
+        Vector3 axisDeriv = GetToolAxisAt(1) - GetToolAxisAt(0);
+        if (IsAxisConstrained)
+        {
+            axisDeriv = adjacentEnvelopeA1.GetEnvelopeDerivativeTAt(t, 0) - adjacentEnvelopeA1.GetEnvelopeDerivativeTAt(t, 1);
+        }
+        return axisDeriv;
+        // return Vector3.zero;
+    }
+
+    public Vector3 GetToolAxisSecondDerivativeAt(float t)
+    {
+        return Vector3.zero;
     }
 
     private Vector3[] perfectFitToolAxes;
@@ -192,23 +236,11 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    public Vector3 GetToolAxisDerivativeAt(float t)
-    {
-        // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
-        return GetToolAxisAt(1) - GetToolAxisAt(0);
-        // return Vector3.zero;
-    }
-
-    public Vector3 GetToolAxisSecondDerivativeAt(float t)
-    {
-        return Vector3.zero;
-    }
-
     public Vector3 CalculateNormal_Rajain(float t, float a)
     {
         float deltaR = GetToolRadiusAt(1) - GetToolRadiusAt(0);
         Vector3 sa = GetToolAxisAt(t);
-        Vector3 st = GetToolPathTangentAt(t) + a * GetToolAxisDerivativeAt(t);
+        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
         // First fundamental form
         float E = Vector3.Dot(sa, sa);
         float F = Vector3.Dot(sa, st);
@@ -221,6 +253,20 @@ public class Envelope : MonoBehaviour
         return normal.normalized;
     }
 
+    public Vector3 CalculateNormalDerivativeT_Rajain(float t, float a)
+    {
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
+        Vector3 sat = GetToolAxisDerivativeAt(t);
+        Vector3 stt = GetToolPathSecondDerivativeAt(t) + a * GetToolAxisSecondDerivativeAt(t);
+        float G = Vector3.Dot(st, st);
+        float Gt = 2 * Vector3.Dot(st, stt);
+        float G_sqrt = Mathf.Sqrt(G);
+        Vector3 normal = (G * ((Vector3.Cross(sat, st) + Vector3.Cross(sa, stt)) * G_sqrt + Vector3.Cross(sa, st) * Gt / (2 * G_sqrt)) -
+                          Gt * Vector3.Cross(sa, st) * G_sqrt) / (G * G);
+        return normal;
+    }
+
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
     public Vector3 CalculateNormal(float t, float a)
@@ -228,7 +274,7 @@ public class Envelope : MonoBehaviour
         // tool surface derivative wrt a
         Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
         // tool surface derivative wrt t
-        Vector3 st = GetToolPathTangentAt(t) + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
+        Vector3 st = GetToolPathDerivativeAt(t) + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
@@ -290,6 +336,23 @@ public class Envelope : MonoBehaviour
             {
                 Debug.LogWarning(gameObject.name + ": Constraining envelopes too far apart by " + distance);
             }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (Application.isPlaying)
+        {
+            Vector3 p = GetEnvelopeAt(t, 0);
+            Vector3 pt = GetEnvelopeDerivativeTAt(t, 0);
+            Vector3 n = CalculateNormal_Rajain(t, 0);
+            Vector3 nt = CalculateNormalDerivativeT_Rajain(t, 0);
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(p, p + n);
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(p + n, p + n + nt);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(p, p + pt);
         }
     }
 

@@ -92,7 +92,7 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 3] * 3 * t * t;
     }
 
-    public Vector3 EvaluateSecondDerivate(float t)
+    public Vector3 EvaluateSecondDerivative(float t)
     {
         t *= NumSegments;
         t = Mathf.Clamp(t, 0, NumSegments);
@@ -131,6 +131,7 @@ public class BezierCurve : MonoBehaviour
     {
         if (showControlPoints)
         {
+            Gizmos.color = Color.white;
             for (int i = 0; i < points.Count; i++)
             {
                 Gizmos.DrawSphere(points[i], 0.05f);
