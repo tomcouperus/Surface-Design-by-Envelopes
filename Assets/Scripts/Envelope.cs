@@ -228,7 +228,7 @@ public class Envelope : MonoBehaviour
         // tool surface derivative wrt a
         Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
         // tool surface derivative wrt t
-        Vector3 st = GetToolPathTangentAt(t).normalized + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
+        Vector3 st = GetToolPathTangentAt(t) + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
