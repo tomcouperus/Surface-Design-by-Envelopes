@@ -247,24 +247,43 @@ public class Envelope : MonoBehaviour
         float G = Vector3.Dot(st, st);
         // Debug.Log("E: " + E.ToString("F2") + " -- F: " + F.ToString("F2") + " -- G: " + G.ToString("F2"));
 
+        Vector3 numerator = deltaR * (G * sa - F * st) +
+                            Vector3.Cross(sa, st) * Mathf.Sqrt((E - deltaR * deltaR) * G - F * F);
+        float denominator = E * G - F * F;
+
         // Calculate the normal
-        Vector3 normal = (deltaR * (G * sa - F * st) + Vector3.Cross(sa, st) * Mathf.Sqrt((E - deltaR * deltaR) * G - F * F)) /
-                         (E * G - F * F);
+        Vector3 normal = numerator / denominator;
         return normal.normalized;
     }
 
     public Vector3 CalculateNormalDerivativeT_Rajain(float t, float a)
     {
+        // Tool axis ruled surface derivatives
         Vector3 sa = GetToolAxisAt(t);
         Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
         Vector3 sat = GetToolAxisDerivativeAt(t);
         Vector3 stt = GetToolPathSecondDerivativeAt(t) + a * GetToolAxisSecondDerivativeAt(t);
+        // First fundamental form of tool axis ruled surface
+        float E = Vector3.Dot(sa, sa);
+        float Et = 2 * Vector3.Dot(sa, sat);
+        float F = Vector3.Dot(sa, st);
+        float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
         float G = Vector3.Dot(st, st);
         float Gt = 2 * Vector3.Dot(st, stt);
-        float G_sqrt = Mathf.Sqrt(G);
-        Vector3 normal = (G * ((Vector3.Cross(sat, st) + Vector3.Cross(sa, stt)) * G_sqrt + Vector3.Cross(sa, st) * Gt / (2 * G_sqrt)) -
-                          Gt * Vector3.Cross(sa, st) * G_sqrt) / (G * G);
-        return normal;
+
+        float EG_FF = E * G - F * F;
+        float EG_FFDeriv = Et * G + E * Gt - 2 * F * Ft;
+        float sqrtEG_FF = Mathf.Sqrt(EG_FF);
+        float sqrtEG_FFDeriv = EG_FFDeriv / (2 * sqrtEG_FF);
+        Vector3 saXst = Vector3.Cross(sa, st);
+        Vector3 saXstDeriv = Vector3.Cross(sat, st) + Vector3.Cross(sa, stt);
+
+        Vector3 numerator = EG_FF * (saXstDeriv * sqrtEG_FF + saXst * sqrtEG_FFDeriv) -
+                            saXst * sqrtEG_FF * EG_FFDeriv;
+        float denominator = EG_FF * EG_FF;
+
+        Vector3 normalDerivativeT = numerator / denominator;
+        return normalDerivativeT;
     }
 
     // Calculate normal of envelope according to Bassegoda's paper

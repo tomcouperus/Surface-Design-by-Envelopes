@@ -190,7 +190,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &201796169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -213,6 +213,7 @@ MonoBehaviour:
   tSectors: 50
   aSectors: 20
   t: 0
+  showTool: 1
 --- !u!33 &201796170
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -761,6 +762,7 @@ MonoBehaviour:
   tSectors: 50
   aSectors: 20
   t: 0
+  showTool: 1
 --- !u!33 &637717022
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1419,6 +1421,7 @@ MonoBehaviour:
   tSectors: 50
   aSectors: 20
   t: 0
+  showTool: 1
 --- !u!33 &1414857564
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1667,6 +1670,7 @@ MonoBehaviour:
   tSectors: 50
   aSectors: 20
   t: 0
+  showTool: 1
 --- !u!33 &1749886490
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1752,7 +1756,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1785951851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1775,6 +1779,7 @@ MonoBehaviour:
   tSectors: 50
   aSectors: 20
   t: 0
+  showTool: 1
 --- !u!33 &1785951852
 MeshFilter:
   m_ObjectHideFlags: 0
