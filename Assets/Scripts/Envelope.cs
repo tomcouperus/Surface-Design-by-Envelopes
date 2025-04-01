@@ -108,6 +108,34 @@ public class Envelope : MonoBehaviour
         return data;
     }
 
+    public Vector3 GetEnvelopeAt_MOS(float t, float a)
+    {
+        Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
+
+        float r = GetToolRadiusAt(a);
+        float ra = GetToolRadiusDerivateAt(a);
+        float rt = 0;
+
+        float p01 = sa.x * st.y - sa.y * st.x;
+        float p02 = sa.x * st.z - sa.z * st.x;
+        float p03 = sa.x * rt - ra * st.x;
+        float p23 = sa.z * rt - ra * st.z;
+        float p31 = ra * st.y - sa.y * rt;
+        float p12 = sa.y * st.z - sa.z * st.y;
+
+        Vector3 A = new(
+            p02 * p23 - p01 * p31,
+            p23 * p12 - p01 * p03,
+            p31 * p12 - p02 * p03
+        );
+        Vector3 B = new(p12, -p02, p01);
+        float C = (p01 * p01) + (p02 * p02) - (p03 * p03) - (p23 * p23) - (p31 * p31) + (p12 * p12);
+        float D = r / ((p01 * p01) + (p02 * p02) + (p12 * p12));
+        return s + D * (A - Mathf.Sqrt(C) * B);
+    }
+
     public Vector3 GetEnvelopeAt(float t, float a)
     {
         return GetToolPathAt(t) + a /* * toolHeight */ * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
@@ -161,7 +189,7 @@ public class Envelope : MonoBehaviour
         return toolRadius;
     }
 
-    public float GetRadiusDerivateAt(float a)
+    public float GetToolRadiusDerivateAt(float a)
     {
         // Todo replace with actual derivate. Is fixed for now
         return 0;
@@ -297,7 +325,7 @@ public class Envelope : MonoBehaviour
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
-        float ra = GetRadiusDerivateAt(a);
+        float ra = GetToolRadiusDerivateAt(a);
         float alpha, beta, gamma;
         // Determinant of partial derivative matrix
         float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));

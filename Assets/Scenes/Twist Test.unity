@@ -251,8 +251,8 @@ MonoBehaviour:
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
   perfectFit: 0
-  tSectors: 50
-  aSectors: 20
+  tSectors: 100
+  aSectors: 40
   t: 0.4
   showTool: 1
 --- !u!33 &637717022
