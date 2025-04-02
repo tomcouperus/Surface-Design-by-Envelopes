@@ -70,9 +70,9 @@ public class BezierCurve : MonoBehaviour
         // Get the decimal part of t
         t -= segment;
 
-        return points[segment * 3 + 0] * (1 - t) * (1 - t) * (1 - t) +
-               points[segment * 3 + 1] * 3 * t * (1 - t) * (1 - t) +
-               points[segment * 3 + 2] * 3 * t * t * (1 - t) +
+        return points[segment * 3 + 0] * (-t * t * t + 3 * t * t - 3 * t + 1) +
+               points[segment * 3 + 1] * (3 * t * t * t - 6 * t * t + 3 * t) +
+               points[segment * 3 + 2] * (-3 * t * t * t + 3 * t * t) +
                points[segment * 3 + 3] * t * t * t;
     }
 
@@ -86,10 +86,10 @@ public class BezierCurve : MonoBehaviour
         // Get the decimal part of t
         t -= segment;
 
-        return points[segment * 3 + 0] * -3 * (1 - t) * (1 - t) +
-               points[segment * 3 + 1] * (-6 * t * (1 - t) + 3 * (1 - t) * (1 - t)) +
-               points[segment * 3 + 2] * (-3 * t * t + 6 * t * (1 - t)) +
-               points[segment * 3 + 3] * 3 * t * t;
+        return points[segment * 3 + 0] * (-3 * t * t + 6 * t - 3) +
+               points[segment * 3 + 1] * (9 * t * t - 12 * t + 3) +
+               points[segment * 3 + 2] * (-9 * t * t + 6 * t) +
+               points[segment * 3 + 3] * (3 * t * t);
     }
 
     public Vector3 EvaluateSecondDerivative(float t)
@@ -101,10 +101,10 @@ public class BezierCurve : MonoBehaviour
         // Get the decimal part of t
         t -= segment;
 
-        return points[segment * 3 + 0] * 6 * (1 - t) +
-               points[segment * 3 + 1] * (-12 * (1 - t) + 6 * t) +
-               points[segment * 3 + 2] * (6 * (1 - t) - 12 * t) +
-               points[segment * 3 + 3] * 6 * t;
+        return points[segment * 3 + 0] * (-6 * t + 6) +
+               points[segment * 3 + 1] * (18 * t - 12) +
+               points[segment * 3 + 2] * (-18 * t + 6) +
+               points[segment * 3 + 3] * (6 * t);
     }
 
     public void UpdateLineRenderer()
