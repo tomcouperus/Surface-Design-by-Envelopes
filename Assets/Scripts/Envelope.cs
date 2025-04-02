@@ -130,7 +130,7 @@ public class Envelope : MonoBehaviour
         Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
 
         float r = GetToolRadiusAt(a);
-        float ra = GetToolRadiusDerivateAt(a);
+        float ra = GetToolRadiusDerivativeAt(a);
         float rt = 0;
 
         float p01 = sa.x * st.y - sa.y * st.x;
@@ -210,7 +210,7 @@ public class Envelope : MonoBehaviour
         return toolRadius;
     }
 
-    public float GetToolRadiusDerivateAt(float a)
+    public float GetToolRadiusDerivativeAt(float a)
     {
         // Todo replace with actual derivate. Is fixed for now
         return 0;
@@ -346,7 +346,7 @@ public class Envelope : MonoBehaviour
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
-        float ra = GetToolRadiusDerivateAt(a);
+        float ra = GetToolRadiusDerivativeAt(a);
         float alpha, beta, gamma;
         // Determinant of partial derivative matrix
         float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));
