@@ -9,6 +9,8 @@ public class Envelope : MonoBehaviour
 {
     [SerializeField]
     private Mesh mesh;
+    [SerializeField]
+    private GameObject sphere;
     [Header("Tool")]
     [SerializeField]
     private Vector3 toolAxisT0 = Vector3.up;
@@ -38,7 +40,12 @@ public class Envelope : MonoBehaviour
     [Range(0, 1)]
     private float t = 0;
     [SerializeField]
+    [Range(0, 1)]
+    private float a = 0;
+    [SerializeField]
     private bool showTool = true;
+    [SerializeField]
+    private bool showSphere = false;
 
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
@@ -64,6 +71,7 @@ public class Envelope : MonoBehaviour
     void Update()
     {
         UpdateTool();
+        UpdateSphere();
     }
 
     private void UpdateTool()
@@ -73,6 +81,13 @@ public class Envelope : MonoBehaviour
         if (perfectFit && perfectFitToolAxes == null) return;
         tool.transform.localPosition = GetToolPathAt(t);
         tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
+    }
+
+    private void UpdateSphere()
+    {
+        if (sphere == null) return;
+        sphere.SetActive(showSphere);
+        sphere.transform.localPosition = GetToolPathAt(t) + a * GetToolAxisAt(t);
     }
 
     private MeshData GenerateMeshData()
@@ -133,6 +148,12 @@ public class Envelope : MonoBehaviour
         Vector3 B = new(p12, -p02, p01);
         float C = (p01 * p01) + (p02 * p02) - (p03 * p03) - (p23 * p23) - (p31 * p31) + (p12 * p12);
         float D = r / ((p01 * p01) + (p02 * p02) + (p12 * p12));
+
+        if (C < 0)
+        {
+            Debug.LogWarning("C is negative, thus the envelope is not defined");
+        }
+
         return s + D * (A - Mathf.Sqrt(C) * B);
     }
 
@@ -400,6 +421,11 @@ public class Envelope : MonoBehaviour
             // Gizmos.DrawLine(p + n, p + n + nt);
             // Gizmos.color = Color.blue;
             // Gizmos.DrawLine(p, p + pt);
+
+            Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
+            Vector3 x = GetEnvelopeAt_MOS(t, a);
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(s, x);
         }
     }
 
