@@ -7,10 +7,14 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class Envelope : MonoBehaviour
 {
+    public enum EnvelopeType { Bassegoda, Rajain, Bizarri, MOS };
+
     [SerializeField]
     private Mesh mesh;
     [SerializeField]
     private GameObject sphere;
+    [SerializeField]
+    private EnvelopeType envelopeType = EnvelopeType.MOS;
     [Header("Tool")]
     [SerializeField]
     private Vector3 toolAxisT0 = Vector3.up;
@@ -123,6 +127,50 @@ public class Envelope : MonoBehaviour
         return data;
     }
 
+    public Vector3 GetEnvelopeAt(float t, float a)
+    {
+        Vector3 vertex = Vector3.zero;
+        switch (envelopeType)
+        {
+            case EnvelopeType.Bassegoda:
+                vertex = GetEnvelopeAt_Bassegoda(t, a);
+                break;
+            case EnvelopeType.Rajain:
+                vertex = GetEnvelopeAt_Rajain(t, a);
+                break;
+            case EnvelopeType.Bizarri:
+                vertex = GetEnvelopeAt_Bizarri(t, a);
+                break;
+            case EnvelopeType.MOS:
+                vertex = GetEnvelopeAt_MOS(t, a);
+                break;
+        }
+        return vertex;
+    }
+
+    public Vector3 GetEnvelopeAt_Bizarri(float t, float a)
+    {
+        Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
+
+        float r = GetToolRadiusAt(a);
+        float ra = GetToolRadiusDerivativeAt(a);
+        float rt = 0;
+
+        float E = Vector3.Dot(sa, sa);
+        float F = Vector3.Dot(sa, st);
+        float G = Vector3.Dot(st, st);
+
+        float Ebar = E - ra * ra;
+        float Fbar = F - ra * rt;
+        float Gbar = G - rt * rt;
+
+        Vector3 n = ((ra * G - rt * F) * sa + (rt * E - ra * F) * st) / (E * G - F * F) +
+                    Vector3.Cross(sa, st) * Mathf.Sqrt(Ebar * Gbar - Fbar * Fbar) / (E * G - F * F);
+        return s - r * n.normalized;
+    }
+
     public Vector3 GetEnvelopeAt_MOS(float t, float a)
     {
         Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
@@ -157,9 +205,13 @@ public class Envelope : MonoBehaviour
         return s + D * (A - Mathf.Sqrt(C) * B);
     }
 
-    public Vector3 GetEnvelopeAt(float t, float a)
+    public Vector3 GetEnvelopeAt_Rajain(float t, float a)
     {
-        return GetToolPathAt(t) + a /* * toolHeight */ * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
+        return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
+    }
+    public Vector3 GetEnvelopeAt_Bassegoda(float t, float a)
+    {
+        return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Bassegoda(t, a);
     }
 
     public Vector3 GetEnvelopeDerivativeTAt(float t, float a)
@@ -172,8 +224,8 @@ public class Envelope : MonoBehaviour
         if (IsPositionContinuous)
         {
             return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) /* * adjacentEnvelopeA0.toolHeight */ +
-                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal(t, 1) -
-                   GetToolRadiusAt(0) * CalculateNormal(t, 0);
+                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal_Bassegoda(t, 1) -
+                   GetToolRadiusAt(0) * CalculateNormal_Bassegoda(t, 0);
         }
         else
         {
@@ -227,7 +279,7 @@ public class Envelope : MonoBehaviour
             }
             else
             {
-                axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                axis = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
             }
         }
         return axis.normalized;
@@ -264,8 +316,8 @@ public class Envelope : MonoBehaviour
             }
             float s = sPrevious;
             float t = (float)tIdx / tSectors;
-            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt(s, 0);
+            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
+            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(s, 0);
             float d = 1;
             float sqrDiff = (x3 - x1).sqrMagnitude - d * d;
             float deltaS = 1.0f / (tSectors * 50);
@@ -278,7 +330,7 @@ public class Envelope : MonoBehaviour
                     sPrevious = s;
                     break;
                 }
-                x3 = adjacentEnvelopeA1.GetEnvelopeAt(s + deltaS, 0);
+                x3 = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(s + deltaS, 0);
                 sqrDiff = (x3 - x1).sqrMagnitude - d * d;
                 s += deltaS;
             }
@@ -337,7 +389,7 @@ public class Envelope : MonoBehaviour
 
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
-    public Vector3 CalculateNormal(float t, float a)
+    public Vector3 CalculateNormal_Bassegoda(float t, float a)
     {
         // tool surface derivative wrt a
         Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
@@ -354,7 +406,7 @@ public class Envelope : MonoBehaviour
         alpha = m11 * -ra;
         float m21 = -Vector3.Dot(st, sa) / determinant;
         beta = m21 * -ra;
-        gamma = -1 * (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        gamma = (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
 
         Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
         return envelopeNormal.normalized;
@@ -394,7 +446,7 @@ public class Envelope : MonoBehaviour
             for (int tIdx = 0; tIdx <= tSectors; tIdx++)
             {
                 float t = (float)tIdx / tSectors;
-                Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
                 if (axis.sqrMagnitude > 1 + 1e-5/* toolHeight * toolHeight */)
                 {
                     distance = Mathf.Max(distance, axis.magnitude - 1);
@@ -422,8 +474,12 @@ public class Envelope : MonoBehaviour
             // Gizmos.color = Color.blue;
             // Gizmos.DrawLine(p, p + pt);
 
-            Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
-            Vector3 x = GetEnvelopeAt_MOS(t, a);
+            Vector3 p = GetToolPathAt(t);
+            Vector3 axis = GetToolAxisAt(t);
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(p, p + axis);
+            Vector3 s = p + a * axis;
+            Vector3 x = GetEnvelopeAt(t, a);
             Gizmos.color = Color.green;
             Gizmos.DrawLine(s, x);
         }
