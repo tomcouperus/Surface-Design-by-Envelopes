@@ -7,14 +7,11 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class Envelope : MonoBehaviour
 {
-    public enum EnvelopeType { Bassegoda, Rajain, Bizarri, MOS };
 
     [SerializeField]
     private Mesh mesh;
     [SerializeField]
     private GameObject sphere;
-    [SerializeField]
-    private EnvelopeType envelopeType = EnvelopeType.MOS;
     [Header("Tool")]
     [SerializeField]
     private Vector3 toolAxisT0 = Vector3.up;
@@ -129,94 +126,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetEnvelopeAt(float t, float a)
     {
-        Vector3 vertex = Vector3.zero;
-        switch (envelopeType)
-        {
-            case EnvelopeType.Bassegoda:
-                vertex = GetEnvelopeAt_Bassegoda(t, a);
-                break;
-            case EnvelopeType.Rajain:
-                vertex = GetEnvelopeAt_Rajain(t, a);
-                break;
-            case EnvelopeType.Bizarri:
-                vertex = GetEnvelopeAt_Bizarri(t, a);
-                break;
-            case EnvelopeType.MOS:
-                vertex = GetEnvelopeAt_MOS(t, a);
-                break;
-        }
-        return vertex;
-    }
-
-    public Vector3 GetEnvelopeAt_Bizarri(float t, float a)
-    {
-        Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
-        Vector3 sa = GetToolAxisAt(t);
-        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
-
-        float r = GetToolRadiusAt(a);
-        float ra = GetToolRadiusDerivativeAt(a);
-        float rt = 0;
-
-        float E = Vector3.Dot(sa, sa);
-        float F = Vector3.Dot(sa, st);
-        float G = Vector3.Dot(st, st);
-
-        float Ebar = E - ra * ra;
-        float Fbar = F - ra * rt;
-        float Gbar = G - rt * rt;
-
-        Vector3 n = ((ra * G - rt * F) * sa + (rt * E - ra * F) * st) / (E * G - F * F) +
-                    Vector3.Cross(sa, st) * Mathf.Sqrt(Ebar * Gbar - Fbar * Fbar) / (E * G - F * F);
-        return s - r * n.normalized;
-    }
-
-    public Vector3 GetEnvelopeAt_MOS(float t, float a)
-    {
-        Vector3 s = GetToolPathAt(t) + a * GetToolAxisAt(t);
-        Vector3 sa = GetToolAxisAt(t);
-        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
-
-        float r = GetToolRadiusAt(a);
-        float ra = GetToolRadiusDerivativeAt(a);
-        float rt = 0;
-
-        float p01 = sa.x * st.y - sa.y * st.x;
-        float p02 = sa.x * st.z - sa.z * st.x;
-        float p03 = sa.x * rt - ra * st.x;
-        float p23 = sa.z * rt - ra * st.z;
-        float p31 = ra * st.y - sa.y * rt;
-        float p12 = sa.y * st.z - sa.z * st.y;
-
-        Vector3 A = new(
-            p02 * p23 - p01 * p31,
-            p23 * p12 - p01 * p03,
-            p31 * p12 - p02 * p03
-        );
-        Vector3 B = new(p12, -p02, p01);
-        float C = (p01 * p01) + (p02 * p02) - (p03 * p03) - (p23 * p23) - (p31 * p31) + (p12 * p12);
-        float D = r / ((p01 * p01) + (p02 * p02) + (p12 * p12));
-
-        if (C < 0)
-        {
-            Debug.LogWarning("C is negative, thus the envelope is not defined");
-        }
-
-        return s + D * (A - Mathf.Sqrt(C) * B);
-    }
-
-    public Vector3 GetEnvelopeAt_Rajain(float t, float a)
-    {
-        return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Rajain(t, a);
-    }
-    public Vector3 GetEnvelopeAt_Bassegoda(float t, float a)
-    {
-        return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal_Bassegoda(t, a);
-    }
-
-    public Vector3 GetEnvelopeDerivativeTAt(float t, float a)
-    {
-        return GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t) - GetToolRadiusAt(a) * CalculateNormalDerivativeT_Rajain(t, a);
+        return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal(t, a);
     }
 
     public Vector3 GetToolPathAt(float t)
@@ -224,8 +134,8 @@ public class Envelope : MonoBehaviour
         if (IsPositionContinuous)
         {
             return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) /* * adjacentEnvelopeA0.toolHeight */ +
-                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal_Bassegoda(t, 1) -
-                   GetToolRadiusAt(0) * CalculateNormal_Bassegoda(t, 0);
+                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal(t, 1) -
+                   GetToolRadiusAt(0) * CalculateNormal(t, 0);
         }
         else
         {
@@ -279,7 +189,7 @@ public class Envelope : MonoBehaviour
             }
             else
             {
-                axis = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
+                axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
             }
         }
         return axis.normalized;
@@ -289,10 +199,6 @@ public class Envelope : MonoBehaviour
     {
         // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
         Vector3 axisDeriv = GetToolAxisAt(1) - GetToolAxisAt(0);
-        if (IsAxisConstrained)
-        {
-            axisDeriv = adjacentEnvelopeA1.GetEnvelopeDerivativeTAt(t, 0) - adjacentEnvelopeA1.GetEnvelopeDerivativeTAt(t, 1);
-        }
         return axisDeriv;
         // return Vector3.zero;
     }
@@ -316,8 +222,8 @@ public class Envelope : MonoBehaviour
             }
             float s = sPrevious;
             float t = (float)tIdx / tSectors;
-            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
-            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(s, 0);
+            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt(s, 0);
             float d = 1;
             float sqrDiff = (x3 - x1).sqrMagnitude - d * d;
             float deltaS = 1.0f / (tSectors * 50);
@@ -330,66 +236,16 @@ public class Envelope : MonoBehaviour
                     sPrevious = s;
                     break;
                 }
-                x3 = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(s + deltaS, 0);
+                x3 = adjacentEnvelopeA1.GetEnvelopeAt(s + deltaS, 0);
                 sqrDiff = (x3 - x1).sqrMagnitude - d * d;
                 s += deltaS;
             }
         }
     }
 
-    public Vector3 CalculateNormal_Rajain(float t, float a)
-    {
-        float deltaR = GetToolRadiusAt(1) - GetToolRadiusAt(0);
-        Vector3 sa = GetToolAxisAt(t);
-        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
-        // First fundamental form
-        float E = Vector3.Dot(sa, sa);
-        float F = Vector3.Dot(sa, st);
-        float G = Vector3.Dot(st, st);
-        // Debug.Log("E: " + E.ToString("F2") + " -- F: " + F.ToString("F2") + " -- G: " + G.ToString("F2"));
-
-        Vector3 numerator = deltaR * (G * sa - F * st) +
-                            Vector3.Cross(sa, st) * Mathf.Sqrt((E - deltaR * deltaR) * G - F * F);
-        float denominator = E * G - F * F;
-
-        // Calculate the normal
-        Vector3 normal = numerator / denominator;
-        return normal.normalized;
-    }
-
-    public Vector3 CalculateNormalDerivativeT_Rajain(float t, float a)
-    {
-        // Tool axis ruled surface derivatives
-        Vector3 sa = GetToolAxisAt(t);
-        Vector3 st = GetToolPathDerivativeAt(t) + a * GetToolAxisDerivativeAt(t);
-        Vector3 sat = GetToolAxisDerivativeAt(t);
-        Vector3 stt = GetToolPathSecondDerivativeAt(t) + a * GetToolAxisSecondDerivativeAt(t);
-        // First fundamental form of tool axis ruled surface
-        float E = Vector3.Dot(sa, sa);
-        float Et = 2 * Vector3.Dot(sa, sat);
-        float F = Vector3.Dot(sa, st);
-        float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
-        float G = Vector3.Dot(st, st);
-        float Gt = 2 * Vector3.Dot(st, stt);
-
-        float EG_FF = E * G - F * F;
-        float EG_FFDeriv = Et * G + E * Gt - 2 * F * Ft;
-        float sqrtEG_FF = Mathf.Sqrt(EG_FF);
-        float sqrtEG_FFDeriv = EG_FFDeriv / (2 * sqrtEG_FF);
-        Vector3 saXst = Vector3.Cross(sa, st);
-        Vector3 saXstDeriv = Vector3.Cross(sat, st) + Vector3.Cross(sa, stt);
-
-        Vector3 numerator = EG_FF * (saXstDeriv * sqrtEG_FF + saXst * sqrtEG_FFDeriv) -
-                            saXst * sqrtEG_FF * EG_FFDeriv;
-        float denominator = EG_FF * EG_FF;
-
-        Vector3 normalDerivativeT = numerator / denominator;
-        return normalDerivativeT;
-    }
-
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
-    public Vector3 CalculateNormal_Bassegoda(float t, float a)
+    public Vector3 CalculateNormal(float t, float a)
     {
         // tool surface derivative wrt a
         Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
@@ -446,7 +302,7 @@ public class Envelope : MonoBehaviour
             for (int tIdx = 0; tIdx <= tSectors; tIdx++)
             {
                 float t = (float)tIdx / tSectors;
-                Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt_Bassegoda(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt_Bassegoda(t, 1);
+                Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 if (axis.sqrMagnitude > 1 + 1e-5/* toolHeight * toolHeight */)
                 {
                     distance = Mathf.Max(distance, axis.magnitude - 1);
