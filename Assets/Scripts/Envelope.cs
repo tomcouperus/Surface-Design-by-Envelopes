@@ -319,24 +319,19 @@ public class Envelope : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            // Vector3 p = GetEnvelopeAt(t, 0);
-            // Vector3 pt = GetEnvelopeDerivativeTAt(t, 0);
-            // Vector3 n = CalculateNormal_Rajain(t, 0);
-            // Vector3 nt = CalculateNormalDerivativeT_Rajain(t, 0);
-            // Gizmos.color = Color.red;
-            // Gizmos.DrawLine(p, p + n);
-            // Gizmos.color = Color.green;
-            // Gizmos.DrawLine(p + n, p + n + nt);
-            // Gizmos.color = Color.blue;
-            // Gizmos.DrawLine(p, p + pt);
-
             Vector3 p = GetToolPathAt(t);
             Vector3 axis = GetToolAxisAt(t);
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(p, p + axis);
+            Vector3 axis_t = GetToolAxisDerivativeAt(t);
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
+            // Axis
             Gizmos.color = Color.green;
+            Gizmos.DrawLine(p, p + axis);
+            // Axis derivative
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(p, p + axis_t);
+            // Normal
+            Gizmos.color = Color.red;
             Gizmos.DrawLine(s, x);
         }
     }
