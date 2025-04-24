@@ -180,27 +180,27 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisAt(float t)
     {
-        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t).normalized;
-        if (IsAxisConstrained)
-        {
-            if (perfectFit)
-            {
-                axis = perfectFitToolAxes[(int)(t * tSectors)];
-            }
-            else
-            {
-                axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            }
-        }
+        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+        // if (IsAxisConstrained)
+        // {
+        //     if (perfectFit)
+        //     {
+        //         axis = perfectFitToolAxes[(int)(t * tSectors)];
+        //     }
+        //     else
+        //     {
+        //         axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+        //     }
+        // }
         return axis.normalized;
     }
 
     public Vector3 GetToolAxisDerivativeAt(float t)
     {
-        // Todo replace with derivative of tool axis, but since that's fixed it's just zero for now
-        Vector3 axisDeriv = GetToolAxisAt(1) - GetToolAxisAt(0);
+        Vector3 axisLerp = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+        Vector3 axisLerpDeriv = toolAxisT1 - toolAxisT0;
+        Vector3 axisDeriv = (axisLerp.magnitude * axisLerpDeriv - (axisLerp * Vector3.Dot(axisLerp, axisLerpDeriv) / axisLerp.magnitude)) / axisLerp.sqrMagnitude;
         return axisDeriv;
-        // return Vector3.zero;
     }
 
     public Vector3 GetToolAxisSecondDerivativeAt(float t)
@@ -325,13 +325,13 @@ public class Envelope : MonoBehaviour
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
             // Axis
-            Gizmos.color = Color.green;
+            Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis);
             // Axis derivative
             Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis_t);
             // Normal
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.green;
             Gizmos.DrawLine(s, x);
         }
     }

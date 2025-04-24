@@ -51,6 +51,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Surface Design by Envelopes.sln",
+    "dotnet.defaultSolution": "Surface-Design-by-Envelopes.sln",
     "git.ignoreLimitWarning": true
 }
