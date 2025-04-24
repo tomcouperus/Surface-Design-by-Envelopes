@@ -133,8 +133,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetToolPathAt(t) + adjacentEnvelopeA0.GetToolAxisAt(t) /* * adjacentEnvelopeA0.toolHeight */ +
-                   adjacentEnvelopeA0.GetToolRadiusAt(1) * adjacentEnvelopeA0.CalculateNormal(t, 1) -
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) +
                    GetToolRadiusAt(0) * CalculateNormal(t, 0);
         }
         else
@@ -181,17 +180,17 @@ public class Envelope : MonoBehaviour
     public Vector3 GetToolAxisAt(float t)
     {
         Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
-        // if (IsAxisConstrained)
-        // {
-        //     if (perfectFit)
-        //     {
-        //         axis = perfectFitToolAxes[(int)(t * tSectors)];
-        //     }
-        //     else
-        //     {
-        //         axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-        //     }
-        // }
+        if (IsAxisConstrained)
+        {
+            if (perfectFit)
+            {
+                axis = perfectFitToolAxes[(int)(t * tSectors)];
+            }
+            else
+            {
+                axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            }
+        }
         return axis.normalized;
     }
 
