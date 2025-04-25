@@ -142,11 +142,11 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    public Vector3 GetToolPathDerivativeAt(float t)
+    public Vector3 GetToolPathDtAt(float t)
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetToolPathDerivativeAt(t);
+            return adjacentEnvelopeA0.GetToolPathDtAt(t);
         }
         else
         {
@@ -154,11 +154,11 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    public Vector3 GetToolPathSecondDerivativeAt(float t)
+    public Vector3 GetToolPathDt2At(float t)
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetToolPathSecondDerivativeAt(t);
+            return adjacentEnvelopeA0.GetToolPathDt2At(t);
         }
         else
         {
@@ -171,7 +171,7 @@ public class Envelope : MonoBehaviour
         return toolRadius;
     }
 
-    public float GetToolRadiusDerivativeAt(float a)
+    public float GetToolRadiusDaAt(float a)
     {
         // Todo replace with actual derivate. Is fixed for now
         return 0;
@@ -194,15 +194,15 @@ public class Envelope : MonoBehaviour
         return axis.normalized;
     }
 
-    public Vector3 GetToolAxisDerivativeAt(float t)
+    public Vector3 GetToolAxisDtAt(float t)
     {
-        Vector3 axisLerp = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
-        Vector3 axisLerpDeriv = toolAxisT1 - toolAxisT0;
+        Vector3 axisLerp = GetToolAxisAt(t);
+        Vector3 axisLerpDeriv = GetToolAxisAt(1) - GetToolAxisAt(0);
         Vector3 axisDeriv = (axisLerp.magnitude * axisLerpDeriv - (axisLerp * Vector3.Dot(axisLerp, axisLerpDeriv) / axisLerp.magnitude)) / axisLerp.sqrMagnitude;
         return axisDeriv;
     }
 
-    public Vector3 GetToolAxisSecondDerivativeAt(float t)
+    public Vector3 GetToolAxisDt2At(float t)
     {
         return Vector3.zero;
     }
@@ -249,19 +249,23 @@ public class Envelope : MonoBehaviour
         // tool surface derivative wrt a
         Vector3 sa = /* toolHeight * */ GetToolAxisAt(t);
         // tool surface derivative wrt t
-        Vector3 st = GetToolPathDerivativeAt(t) + a /* * toolHeight */ * GetToolAxisDerivativeAt(t);
+        Vector3 st = GetToolPathDtAt(t) + a /* * toolHeight */ * GetToolAxisDtAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         // tool radius derivate wrt a
-        float ra = GetToolRadiusDerivativeAt(a);
+        float ra = GetToolRadiusDaAt(a);
         float alpha, beta, gamma;
+        // First fundamental form for the various dot products
+        float E = Vector3.Dot(sa, sa);
+        float F = Vector3.Dot(sa, st);
+        float G = Vector3.Dot(st, st);
         // Determinant of partial derivative matrix
-        float determinant = (Vector3.Dot(sa, sa) * Vector3.Dot(st, st)) - (Vector3.Dot(sa, st) * Vector3.Dot(st, sa));
-        float m11 = Vector3.Dot(st, st) / determinant;
+        float EG_FF = E * G - F * F;
+        float m11 = G / EG_FF;
         alpha = m11 * -ra;
-        float m21 = -Vector3.Dot(st, sa) / determinant;
+        float m21 = -F / EG_FF;
         beta = m21 * -ra;
-        gamma = (determinant > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
 
         Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
         return envelopeNormal.normalized;
@@ -320,7 +324,7 @@ public class Envelope : MonoBehaviour
         {
             Vector3 p = GetToolPathAt(t);
             Vector3 axis = GetToolAxisAt(t);
-            Vector3 axis_t = GetToolAxisDerivativeAt(t);
+            Vector3 axis_t = GetToolAxisDtAt(t);
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
             // Axis
