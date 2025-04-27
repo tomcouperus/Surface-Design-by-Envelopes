@@ -25,5 +25,11 @@ public class EnvelopeEditor : Editor
             envelope.UpdatePath();
             envelope.UpdateEnvelope();
         }
+        if (GUILayout.Button("Test"))
+        {
+            Debug.Log("Axis: " + envelope.GetToolAxisAt(0));
+            Debug.Log("d/dt Axis: " + envelope.GetToolAxisDtAt(0));
+            Debug.Log("d2/dt2 Axis: " + envelope.GetToolAxisDt2At(0));
+        }
     }
 }

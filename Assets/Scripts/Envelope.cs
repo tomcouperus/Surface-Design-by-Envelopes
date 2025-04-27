@@ -187,18 +187,24 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDtAt(float t)
     {
-        return Vector3.zero;
+        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+        Vector3 axis_t = toolAxisT1 - toolAxisT0;
+        return MathUtility.NormalVectorDerivative(axis, axis_t);
     }
 
     public Vector3 GetToolAxisDt2At(float t)
     {
-        return Vector3.zero;
+        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+        Vector3 axis_t = toolAxisT1 - toolAxisT0;
+        Vector3 axis_tt = Vector3.zero;
+        return MathUtility.NormalVectorDerivative2(axis, axis_t, axis_tt);
     }
 
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
     public Vector3 CalculateNormal(float t, float a)
     {
+
         return Vector3.forward;
     }
 
