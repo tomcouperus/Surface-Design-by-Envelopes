@@ -129,6 +129,11 @@ public class Envelope : MonoBehaviour
         return GetToolPathAt(t) + a * GetToolAxisAt(t) - GetToolRadiusAt(a) * CalculateNormal(t, a);
     }
 
+    public Vector3 GetEnvelopeDtAt(float t, float a)
+    {
+        return GetToolPathDtAt(t) + a * GetToolAxisDtAt(t) - GetToolRadiusAt(a) * CalculateNormalDtAt(t, a);
+    }
+
     public Vector3 GetToolPathAt(float t)
     {
         if (IsPositionContinuous)
@@ -196,15 +201,33 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDtAt(float t)
     {
-        Vector3 axisLerp = GetToolAxisAt(t);
-        Vector3 axisLerpDeriv = GetToolAxisAt(1) - GetToolAxisAt(0);
-        Vector3 axisDeriv = (axisLerp.magnitude * axisLerpDeriv - (axisLerp * Vector3.Dot(axisLerp, axisLerpDeriv) / axisLerp.magnitude)) / axisLerp.sqrMagnitude;
-        return axisDeriv;
+        if (!IsAxisConstrained)
+        {
+            Vector3 axisLerp = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+            Vector3 axisLerpDeriv = toolAxisT1 - toolAxisT0;
+            return MathUtility.NormalVectorDerivative(axisLerp, axisLerpDeriv);
+        }
+        else
+        {
+            Vector3 axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 axis_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            return MathUtility.NormalVectorDerivative(axis, axis_t);
+        }
     }
 
     public Vector3 GetToolAxisDt2At(float t)
     {
-        return Vector3.zero;
+        if (!IsAxisConstrained)
+        {
+            Vector3 axisLerp = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+            Vector3 axisLerpDeriv = toolAxisT1 - toolAxisT0;
+            return MathUtility.NormalVectorDerivative2(axisLerp, axisLerpDeriv, Vector3.zero);
+        }
+        else
+        {
+            Debug.LogError("2nd derivative of constrained axis");
+            return Vector3.zero;
+        }
     }
 
     private Vector3[] perfectFitToolAxes;
@@ -267,8 +290,51 @@ public class Envelope : MonoBehaviour
         beta = m21 * -ra;
         gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
 
-        Vector3 envelopeNormal = alpha * sa + beta * st + gamma * sNormal;
-        return envelopeNormal.normalized;
+        Vector3 normal = alpha * sa + beta * st + gamma * sNormal;
+        return normal.normalized;
+    }
+
+    public Vector3 CalculateNormalDtAt(float t, float a)
+    {
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 sat = GetToolAxisDtAt(t);
+        Vector3 st = GetToolPathDtAt(t) + a * GetToolAxisDtAt(t);
+        Vector3 stt = GetToolPathDt2At(t) + a * GetToolAxisDt2At(t);
+
+        Vector3 sNormal = Vector3.Cross(sa, st).normalized;
+        Vector3 sNormalt = MathUtility.NormalVectorDerivative(Vector3.Cross(sa, st), Vector3.Cross(sat, st) + Vector3.Cross(sa, stt));
+
+        float ra = GetToolRadiusDaAt(a);
+
+        float E = Vector3.Dot(sa, sa);
+        float Et = 2 * Vector3.Dot(sa, sat);
+        float F = Vector3.Dot(sa, st);
+        float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
+        float G = Vector3.Dot(st, st);
+        float Gt = 2 * Vector3.Dot(st, stt);
+
+        float EG_FF = E * G - F * F;
+        float EG_FF_t = Et * G + E * Gt - 2 * F * Ft;
+
+        float alpha, alpha_t;
+        float m11 = G / EG_FF;
+        float m11_t = (EG_FF * Gt - G * EG_FF_t) / (EG_FF * EG_FF);
+        alpha = m11 * -ra;
+        alpha_t = m11_t * -ra;
+
+        float beta, beta_t;
+        float m21 = -F / EG_FF;
+        float m21_t = -(EG_FF * Ft - F * EG_FF_t) / (EG_FF * EG_FF);
+        beta = m21 * -ra;
+        beta_t = m21_t * -ra;
+
+        float gamma, gamma_t;
+        gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(1 - ra * ra * m11));
+
+        Vector3 normal = alpha * sa + beta * st + gamma * sNormal;
+        Vector3 normalDeriv = alpha * sat + alpha_t * sa + beta * stt + beta_t * st + gamma * sNormalt + gamma_t * sNormal;
+        return MathUtility.NormalVectorDerivative(normal, normalDeriv);
     }
 
     public void UpdateEnvelope()
@@ -327,15 +393,19 @@ public class Envelope : MonoBehaviour
             Vector3 axis_t = GetToolAxisDtAt(t);
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
+            Vector3 n = CalculateNormal(t, a);
+            Vector3 nt = CalculateNormalDtAt(t, a);
             // Axis
             Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis);
             // Axis derivative
-            Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis_t);
             // Normal
             Gizmos.color = Color.green;
-            Gizmos.DrawLine(s, x);
+            Gizmos.DrawLine(s, s - n);
+            // Normal derivative
+            Gizmos.DrawLine(s, s - nt);
+
         }
     }
 
@@ -343,5 +413,10 @@ public class Envelope : MonoBehaviour
     {
         if (adjacentEnvelopeA0 == this) adjacentEnvelopeA0 = null;
         if (adjacentEnvelopeA1 == this || adjacentEnvelopeA1 == adjacentEnvelopeA0) adjacentEnvelopeA1 = null;
+        if (Application.isPlaying)
+        {
+            Debug.Log("axis . axis_t: " + Vector3.Dot(GetToolAxisAt(t), GetToolAxisDtAt(t)));
+            Debug.Log("normal . normal_t: " + Vector3.Dot(CalculateNormal(t, a), CalculateNormalDtAt(t, a)));
+        }
     }
 }
