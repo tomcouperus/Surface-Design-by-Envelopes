@@ -48,28 +48,4 @@ public class MeshData
         mesh.SetUVs(0, uvs);
         mesh.RecalculateNormals();
     }
-
-    public void MakeDoubleSided()
-    {
-        List<Vector3> doubleVertices = new(vertices);
-        doubleVertices.AddRange(vertices);
-
-        List<Vector2> doubleUVs = new(uvs);
-        doubleUVs.AddRange(uvs);
-
-        List<int> doubleTriangles = new(triangles);
-        int[] ccwTriangles = new int[triangles.Length];
-        int triangleCount = triangles.Length / 3;
-        for (int i = 0; i < triangleCount; i++)
-        {
-            ccwTriangles[i * 3] = triangles[i * 3];
-            ccwTriangles[i * 3 + 1] = triangles[i * 3 + 2];
-            ccwTriangles[i * 3 + 2] = triangles[i * 3 + 1];
-        }
-        doubleTriangles.AddRange(ccwTriangles);
-
-        vertices = doubleVertices.ToArray();
-        uvs = doubleUVs.ToArray();
-        triangles = doubleTriangles.ToArray();
-    }
 }
