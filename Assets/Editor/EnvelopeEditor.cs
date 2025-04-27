@@ -22,7 +22,6 @@ public class EnvelopeEditor : Editor
 
         if (GUILayout.Button(updateButton))
         {
-            if (envelope.perfectFit) envelope.CalculatePerfectFitToolAxes();
             envelope.UpdatePath();
             envelope.UpdateEnvelope();
         }
