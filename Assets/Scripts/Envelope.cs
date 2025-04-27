@@ -204,8 +204,26 @@ public class Envelope : MonoBehaviour
     // Expects t in [0, 1] and a in [0, 1]
     public Vector3 CalculateNormal(float t, float a)
     {
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 st = GetToolPathDtAt(t) + a * GetToolAxisDtAt(t);
+        Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
-        return Vector3.forward;
+        float ra = GetToolRadiusDaAt(a);
+
+        float E = Vector3.Dot(sa, sa);
+        float F = Vector3.Dot(sa, st);
+        float G = Vector3.Dot(st, st);
+        float EG_FF = E * G - F * F;
+
+        float m11 = G / EG_FF;
+        float m21 = -F / EG_FF;
+
+        float alpha = -m11 * ra;
+        float beta = -m21 * ra;
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+
+        Vector3 n = alpha * sa + beta * st + gamma * sNormal;
+        return n.normalized;
     }
 
     public Vector3 CalculateNormalDtAt(float t, float a)
