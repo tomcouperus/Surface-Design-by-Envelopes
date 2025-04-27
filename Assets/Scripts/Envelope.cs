@@ -36,9 +36,11 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     [Range(0, 1)]
     private float t = 0;
+    public float T() { return t; }
     [SerializeField]
     [Range(0, 1)]
     private float a = 0;
+    public float A() { return a; }
     [SerializeField]
     private bool showTool = true;
     [SerializeField]
@@ -284,10 +286,5 @@ public class Envelope : MonoBehaviour
     {
         if (adjacentEnvelopeA0 == this) adjacentEnvelopeA0 = null;
         if (adjacentEnvelopeA1 == this || adjacentEnvelopeA1 == adjacentEnvelopeA0) adjacentEnvelopeA1 = null;
-        if (Application.isPlaying)
-        {
-            // Debug.Log("axis . axis_t: " + Vector3.Dot(GetToolAxisAt(t), GetToolAxisDtAt(t)));
-            // Debug.Log("normal . normal_t: " + Vector3.Dot(CalculateNormal(t, a), CalculateNormalDtAt(t, a)));
-        }
     }
 }

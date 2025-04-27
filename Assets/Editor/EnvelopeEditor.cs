@@ -27,9 +27,9 @@ public class EnvelopeEditor : Editor
         }
         if (GUILayout.Button("Test"))
         {
-            Debug.Log("Axis: " + envelope.GetToolAxisAt(0));
-            Debug.Log("d/dt Axis: " + envelope.GetToolAxisDtAt(0));
-            Debug.Log("d2/dt2 Axis: " + envelope.GetToolAxisDt2At(0));
+            Debug.Log("Axis: " + envelope.GetToolAxisAt(envelope.T()));
+            Debug.Log("d/dt Axis: " + envelope.GetToolAxisDtAt(envelope.T()));
+            Debug.Log("d2/dt2 Axis: " + envelope.GetToolAxisDt2At(envelope.T()));
         }
     }
 }

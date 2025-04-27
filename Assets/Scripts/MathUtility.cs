@@ -26,7 +26,7 @@ public class MathUtility
     {
         float l = a.magnitude;
         float dl = Vector3.Dot(a, da) / l;
-        float ddl = l * (Vector3.Dot(da, da) + Vector3.Dot(a, dda)) - Vector3.Dot(a, da) * dl;
+        float ddl = (l * (Vector3.Dot(da, da) + Vector3.Dot(a, dda)) - Vector3.Dot(a, da) * dl) / (l * l);
 
         Vector3 c = l * da - a * dl;
         Vector3 dc = l * dda - a * ddl;
