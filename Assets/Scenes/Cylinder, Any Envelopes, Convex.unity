@@ -204,16 +204,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
+  sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: -0.7}
   toolAxisT1: {x: 0, y: 1, z: -0.7}
   toolRadius: 0.5
+  toolHeight: 1
   adjacentEnvelopeA0: {fileID: 1414857563}
   adjacentEnvelopeA1: {fileID: 1785951851}
-  perfectFit: 0
   tSectors: 50
   aSectors: 20
   t: 0
+  a: 0
   showTool: 1
+  showSphere: 0
 --- !u!33 &201796170
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -753,16 +756,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
+  sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 0.5
+  toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
-  perfectFit: 0
   tSectors: 50
   aSectors: 20
   t: 0
+  a: 0
   showTool: 1
+  showSphere: 0
 --- !u!33 &637717022
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1412,16 +1418,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
+  sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 0.5
+  toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
-  perfectFit: 0
   tSectors: 50
   aSectors: 20
   t: 0
-  showTool: 1
+  a: 0
+  showTool: 0
+  showSphere: 0
 --- !u!33 &1414857564
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1661,16 +1670,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
+  sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 0.5
+  toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
-  perfectFit: 0
   tSectors: 50
   aSectors: 20
   t: 0
+  a: 0
   showTool: 1
+  showSphere: 0
 --- !u!33 &1749886490
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1770,16 +1782,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
+  sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
   toolRadius: 0.5
+  toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
-  perfectFit: 0
   tSectors: 50
   aSectors: 20
   t: 0
-  showTool: 1
+  a: 0
+  showTool: 0
+  showSphere: 0
 --- !u!33 &1785951852
 MeshFilter:
   m_ObjectHideFlags: 0

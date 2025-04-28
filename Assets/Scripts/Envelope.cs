@@ -20,6 +20,8 @@ public class Envelope : MonoBehaviour
     private BezierCurve toolPath;
     [SerializeField]
     private float toolRadius = 0.5f;
+    [SerializeField]
+    private float toolHeight = 1;
     private Tool tool;
 
     [Header("Constraints")]
@@ -77,7 +79,7 @@ public class Envelope : MonoBehaviour
     {
         tool.gameObject.SetActive(showTool);
         if (!showTool) return;
-        tool.transform.localScale = new Vector3(toolRadius * 2, 1, toolRadius * 2);
+        tool.transform.localScale = new Vector3(toolRadius * 2, toolHeight, toolRadius * 2);
         tool.transform.localPosition = GetToolPathAt(t);
         tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
     }
@@ -314,6 +316,7 @@ public class Envelope : MonoBehaviour
             Vector3 p = GetToolPathAt(t);
             Vector3 axis = GetToolAxisAt(t);
             Vector3 axis_t = GetToolAxisDtAt(t);
+            Vector3 aXat = -Vector3.Cross(axis, axis_t);
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
             Vector3 n = CalculateNormalAt(t, a);
@@ -321,13 +324,25 @@ public class Envelope : MonoBehaviour
             // Axis
             Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis);
-            // Axis derivative
             Gizmos.DrawLine(p, p + axis_t);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(p, p + aXat);
+
             // Normal
             Gizmos.color = Color.green;
             Gizmos.DrawLine(s, s - n);
-            // Normal derivative
             // Gizmos.DrawLine(s, s - nt);
+
+            if (IsAxisConstrained)
+            {
+                Vector3 x1x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                Vector3 x1x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+                Gizmos.color = Color.black;
+                Gizmos.DrawLine(p, p + x1x2);
+                Gizmos.DrawLine(p, p + x1x2_t);
+                Gizmos.color = Color.white;
+                Gizmos.DrawLine(p, p + axis + aXat);
+            }
 
         }
     }
@@ -336,5 +351,9 @@ public class Envelope : MonoBehaviour
     {
         if (adjacentEnvelopeA0 == this) adjacentEnvelopeA0 = null;
         if (adjacentEnvelopeA1 == this || adjacentEnvelopeA1 == adjacentEnvelopeA0) adjacentEnvelopeA1 = null;
+        if (Application.isPlaying && IsAxisConstrained)
+        {
+            Debug.Log(Vector3.Angle(adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1), GetToolAxisAt(t) + Vector3.Cross(GetToolAxisAt(t), GetToolAxisDtAt(t))));
+        }
     }
 }
