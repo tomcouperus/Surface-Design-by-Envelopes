@@ -31,6 +31,10 @@ public class Envelope : MonoBehaviour
     private Envelope adjacentEnvelopeA1;
     [SerializeField]
     private bool tangentContinuity;
+    [SerializeField]
+    private float toolAxisDegreeT0;
+    [SerializeField]
+    private float toolAxisDegreeT1;
 
     [Header("Render")]
     [SerializeField]
@@ -189,14 +193,25 @@ public class Envelope : MonoBehaviour
         return 0;
     }
 
+    /// <summary>
+    /// Calculates the rotation of the tool axis when the envelope is tangent continuous.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <returns></returns>
     public Quaternion CalculateToolAxisRotationAt(float t)
     {
         if (!IsTangentContinuous) return Quaternion.identity;
+        // First rotate w.r.t. tangent continuity.
         float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
         Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
         Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
         Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
-        return Quaternion.AngleAxis(degrees, rotationAxis);
+        Quaternion rotation = Quaternion.AngleAxis(degrees, rotationAxis);
+
+        // Then rotate w.r.t. the last freedom: around the normal of the previous envelope.
+        float angle = Mathf.Lerp(toolAxisDegreeT0, toolAxisDegreeT1, t);
+        Quaternion rotationFree = Quaternion.AngleAxis(angle, adjNormal);
+        return rotationFree * rotation;
     }
 
     public Vector3 GetToolAxisAt(float t)
