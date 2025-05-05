@@ -189,6 +189,16 @@ public class Envelope : MonoBehaviour
         return 0;
     }
 
+    public Quaternion CalculateToolAxisRotationAt(float t)
+    {
+        if (!IsTangentContinuous) return Quaternion.identity;
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+        Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
+        Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
+        Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
+        return Quaternion.AngleAxis(degrees, rotationAxis);
+    }
+
     public Vector3 GetToolAxisAt(float t)
     {
         Vector3 axis;
@@ -197,11 +207,7 @@ public class Envelope : MonoBehaviour
             if (IsTangentContinuous)
             {
                 // Rotate the normal of the adjacent envelope around the cross product with the axis of the adjacent envelope
-                float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
-                Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
-                Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
-                Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
-                axis = Quaternion.AngleAxis(degrees, rotationAxis) * adjNormal;
+                axis = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.CalculateNormalAt(t, 1);
             }
             else
             {
@@ -225,11 +231,7 @@ public class Envelope : MonoBehaviour
             if (IsTangentContinuous)
             {
                 // Rotate the normal of the adjacent envelope around the cross product with the axis of the adjacent envelope
-                float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
-                Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
-                Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
-                Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
-                axis_t = Quaternion.AngleAxis(degrees, rotationAxis) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
+                axis_t = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
             }
             else
             {
