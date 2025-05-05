@@ -29,6 +29,8 @@ public class Envelope : MonoBehaviour
     private Envelope adjacentEnvelopeA0;
     [SerializeField]
     private Envelope adjacentEnvelopeA1;
+    [SerializeField]
+    private bool tangentContinuity;
 
     [Header("Render")]
     [SerializeField]
@@ -49,6 +51,7 @@ public class Envelope : MonoBehaviour
     private bool showSphere = false;
 
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
+    public bool IsTangentContinuous { get { return IsPositionContinuous && tangentContinuity; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
 
     private void Awake()
@@ -77,6 +80,7 @@ public class Envelope : MonoBehaviour
 
     private void UpdateTool()
     {
+        // This function should ideally be on the Tool class, but keep it here for now for convenience
         tool.gameObject.SetActive(showTool);
         if (!showTool) return;
         tool.transform.localScale = new Vector3(toolRadius * 2, toolHeight, toolRadius * 2);
@@ -86,6 +90,7 @@ public class Envelope : MonoBehaviour
 
     private void UpdateSphere()
     {
+        // This function should ideally be on the Sphere, but keep it here for now for convenience
         if (sphere == null) return;
         sphere.SetActive(showSphere);
         sphere.transform.localScale = new Vector3(toolRadius * 2, toolRadius * 2, toolRadius * 2);
@@ -152,7 +157,8 @@ public class Envelope : MonoBehaviour
     {
         if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetToolPathDtAt(t);
+            // return adjacentEnvelopeA0.GetToolPathDtAt(t);
+            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
         }
         else
         {
@@ -188,13 +194,27 @@ public class Envelope : MonoBehaviour
         Vector3 axis;
         if (!IsAxisConstrained)
         {
-            axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+            if (IsTangentContinuous)
+            {
+                // Rotate the normal of the adjacent envelope around the cross product with the axis of the adjacent envelope
+                float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+                Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
+                Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
+                Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
+                axis = Quaternion.AngleAxis(degrees, rotationAxis) * adjNormal;
+            }
+            else
+            {
+                axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+                axis.Normalize();
+            }
         }
         else
         {
             axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            axis.Normalize();
         }
-        return axis.normalized;
+        return axis;
     }
 
     public Vector3 GetToolAxisDtAt(float t)
@@ -202,16 +222,30 @@ public class Envelope : MonoBehaviour
         Vector3 axis, axis_t;
         if (!IsAxisConstrained)
         {
-            axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
-            axis_t = toolAxisT1 - toolAxisT0;
+            if (IsTangentContinuous)
+            {
+                // Rotate the normal of the adjacent envelope around the cross product with the axis of the adjacent envelope
+                float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+                Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
+                Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
+                Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
+                axis_t = Quaternion.AngleAxis(degrees, rotationAxis) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
+            }
+            else
+            {
+                axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+                axis_t = toolAxisT1 - toolAxisT0;
+                axis_t = MathUtility.NormalVectorDerivative(axis, axis_t);
+            }
         }
         else
         {
             axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
             axis_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            axis_t = MathUtility.NormalVectorDerivative(axis, axis_t);
 
         }
-        return MathUtility.NormalVectorDerivative(axis, axis_t);
+        return axis_t;
     }
 
     public Vector3 GetToolAxisDt2At(float t)
