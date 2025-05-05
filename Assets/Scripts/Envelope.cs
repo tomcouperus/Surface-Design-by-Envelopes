@@ -267,6 +267,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDt2At(float t)
     {
+        // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
         Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
         Vector3 axis_t = toolAxisT1 - toolAxisT0;
         Vector3 axis_tt = Vector3.zero;
