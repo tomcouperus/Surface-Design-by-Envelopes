@@ -77,7 +77,7 @@ public class BezierCurve : MonoBehaviour
     }
 
     // Expects t in range of [0, 1]
-    public Vector3 EvaluateTangent(float t)
+    public Vector3 EvaluateDerivative(float t)
     {
         t *= NumSegments;
         t = Mathf.Clamp(t, 0, NumSegments);
@@ -92,7 +92,7 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 3] * (3 * t * t);
     }
 
-    public Vector3 EvaluateSecondDerivative(float t)
+    public Vector3 EvaluateDerivative2(float t)
     {
         t *= NumSegments;
         t = Mathf.Clamp(t, 0, NumSegments);
@@ -105,6 +105,21 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 1] * (18 * t - 12) +
                points[segment * 3 + 2] * (-18 * t + 6) +
                points[segment * 3 + 3] * (6 * t);
+    }
+
+    public Vector3 EvaluateDerivative3(float t)
+    {
+        t *= NumSegments;
+        t = Mathf.Clamp(t, 0, NumSegments);
+        // Determine which segment to interpolate based on t
+        int segment = Mathf.Max(Mathf.FloorToInt(t - 0.00001f), 0);
+        // Get the decimal part of t
+        t -= segment;
+
+        return points[segment * 3 + 0] * -6 +
+               points[segment * 3 + 1] * 18 +
+               points[segment * 3 + 2] * -18 +
+               points[segment * 3 + 3] * 6;
     }
 
     public void UpdateLineRenderer()

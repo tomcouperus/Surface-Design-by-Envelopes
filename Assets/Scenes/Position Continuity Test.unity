@@ -405,6 +405,9 @@ MonoBehaviour:
   toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
+  tangentContinuity: 0
+  toolAxisDegreeT0: 0
+  toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
   t: 0.4
@@ -548,13 +551,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.48725584, y: 0.7593459, z: -0.10101724, w: 0.41925076}
   m_LocalPosition: {x: -1.18, y: 3.02, z: -0.66}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 34.193, y: 139.402, z: 52.394}
 --- !u!1 &749751858
 GameObject:
   m_ObjectHideFlags: 0
@@ -1012,6 +1015,9 @@ MonoBehaviour:
   toolHeight: 1
   adjacentEnvelopeA0: {fileID: 637717021}
   adjacentEnvelopeA1: {fileID: 0}
+  tangentContinuity: 0
+  toolAxisDegreeT0: 0
+  toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
   t: 0.4

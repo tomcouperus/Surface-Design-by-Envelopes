@@ -143,6 +143,11 @@ public class Envelope : MonoBehaviour
         return GetToolPathDtAt(t) + a * GetToolAxisDtAt(t) - GetToolRadiusAt(a) * CalculateNormalDtAt(t, a);
     }
 
+    public Vector3 GetEnvelopeDt2At(float t, float a)
+    {
+        return GetToolPathDt2At(t) + a * GetToolAxisDt2At(t) - GetToolRadiusAt(a) * CalculateNormalDt2At(t, a);
+    }
+
     public Vector3 GetToolPathAt(float t)
     {
         if (IsTangentContinuous)
@@ -151,8 +156,9 @@ public class Envelope : MonoBehaviour
         }
         else if (IsPositionContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) +
-                   GetToolRadiusAt(0) * CalculateNormalAt(t, 0);
+            // TODO only works for cylindrical tool, due to the angle between the normal and the axis. General should be possible though
+            Vector3 normal = Vector3.Cross(GetToolAxisAt(t), adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1)).normalized;
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) + GetToolRadiusAt(0) * normal;
         }
         else
         {
@@ -168,25 +174,32 @@ public class Envelope : MonoBehaviour
         }
         else if (IsPositionContinuous)
         {
-            // return adjacentEnvelopeA0.GetToolPathDtAt(t);
-            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            // TODO only works for cylindrical tool, due to the angle between the normal and the axis. General should be possible though
+            Vector3 axis = GetToolAxisAt(t);
+            Vector3 axis_t = GetToolAxisDtAt(t);
+            Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 adjEnv_tt = adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1);
+            Vector3 normal = Vector3.Cross(axis, adjEnv_t);
+            Vector3 normal_t = Vector3.Cross(axis_t, adjEnv_t) + Vector3.Cross(axis, adjEnv_tt);
+            normal_t = MathUtility.NormalVectorDerivative(normal, normal_t);
+            return adjEnv_t + GetToolRadiusAt(0) * normal_t;
         }
         else
         {
-            return toolPath.EvaluateTangent(t);
+            return toolPath.EvaluateDerivative(t);
         }
     }
 
     public Vector3 GetToolPathDt2At(float t)
     {
-        if (IsPositionContinuous)
-        {
-            return adjacentEnvelopeA0.GetToolPathDt2At(t);
-        }
-        else
-        {
-            return toolPath.EvaluateSecondDerivative(t);
-        }
+        // Need to check if these are required for chaining position continuous envelopes
+        return toolPath.EvaluateDerivative2(t);
+    }
+
+    public Vector3 GetToolPathDt3At(float t)
+    {
+        // Need to check if these are required for chaining position continuous envelopes
+        return toolPath.EvaluateDerivative3(t);
     }
 
     public float GetToolRadiusAt(float a)
@@ -286,6 +299,16 @@ public class Envelope : MonoBehaviour
         return MathUtility.NormalVectorDerivative2(axis, axis_t, axis_tt);
     }
 
+    public Vector3 GetToolAxisDt3At(float t)
+    {
+        // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
+        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+        Vector3 axis_t = toolAxisT1 - toolAxisT0;
+        Vector3 axis_tt = Vector3.zero;
+        Vector3 axis_ttt = Vector3.zero;
+        return MathUtility.NormalVectorDerivative3(axis, axis_t, axis_tt, axis_ttt);
+    }
+
     // Calculate normal of envelope according to Bassegoda's paper
     // Expects t in [0, 1] and a in [0, 1]
     public Vector3 CalculateNormalAt(float t, float a)
@@ -349,6 +372,67 @@ public class Envelope : MonoBehaviour
         return MathUtility.NormalVectorDerivative(n, nt);
     }
 
+    public Vector3 CalculateNormalDt2At(float t, float a)
+    {
+        Vector3 sa = GetToolAxisAt(t);
+        Vector3 sat = GetToolAxisDtAt(t);
+        Vector3 satt = GetToolAxisDt2At(t);
+        Vector3 st = GetToolPathDtAt(t) + a * GetToolAxisDtAt(t);
+        Vector3 stt = GetToolPathDt2At(t) + a * GetToolAxisDt2At(t);
+        Vector3 sttt = GetToolPathDt3At(t) + a * GetToolAxisDt3At(t);
+        Vector3 sNormal = Vector3.Cross(sa, st);
+        Vector3 sNormal_t = Vector3.Cross(sat, st) + Vector3.Cross(sa, stt);
+        Vector3 sNormal_tt = Vector3.Cross(satt, st) + Vector3.Cross(sat, stt) + Vector3.Cross(sat, stt) + Vector3.Cross(sa, sttt);
+        sNormal_tt = MathUtility.NormalVectorDerivative2(sNormal, sNormal_t, sNormal_tt);
+        sNormal_t = MathUtility.NormalVectorDerivative(sNormal, sNormal_t);
+        sNormal.Normalize();
+
+        float ra = GetToolRadiusDaAt(a);
+
+        float E = Vector3.Dot(sa, sa);
+        float Et = 2 * Vector3.Dot(sa, sat);
+        float Ett = 2 * (Vector3.Dot(sat, sat) + Vector3.Dot(sa, satt));
+        float F = Vector3.Dot(sa, st);
+        float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
+        float Ftt = Vector3.Dot(satt, st) + Vector3.Dot(sat, stt) + Vector3.Dot(sat, stt) + Vector3.Dot(sa, sttt);
+        float G = Vector3.Dot(st, st);
+        float Gt = 2 * Vector3.Dot(st, stt);
+        float Gtt = 2 * (Vector3.Dot(stt, stt) + Vector3.Dot(st, sttt));
+        float EG_FF = E * G - F * F;
+        float EG_FF_2 = EG_FF * EG_FF;
+        float EG_FF_t = Et * G + E * Gt - 2 * F * Ft;
+        float EG_FF_2_t = 2 * EG_FF * EG_FF_t;
+        float EG_FF_tt = Ett * G + Et * Gt + Et * Gt + E * Gtt - 2 * (Ft * Ft + F * Ftt);
+
+        float m11 = G / EG_FF;
+        float m11_t = (EG_FF * Gt - G * EG_FF_t) / EG_FF_2;
+        float m11_tt = (EG_FF_2 * ((EG_FF_t * Gt + EG_FF * Gtt) - (Gt * EG_FF_t + G * EG_FF_tt)) - (EG_FF * Gt - G * EG_FF_t) * EG_FF_2_t) / (EG_FF_2 * EG_FF_2);
+        float m21 = -F / EG_FF;
+        float m21_t = -(EG_FF * Ft - F * EG_FF_t) / EG_FF_2;
+        float m21_tt = -(EG_FF_2 * ((EG_FF_t * Ft + EG_FF * Ftt) - (Ft * EG_FF_t + F * EG_FF_tt)) - (EG_FF * Ft - F * EG_FF_t) * EG_FF_2_t) / (EG_FF_2 * EG_FF_2);
+
+        float alpha = -m11 * ra;
+        float alpha_t = -m11_t * ra;
+        float alpha_tt = -m11_tt * ra;
+        float beta = -m21 * ra;
+        float beta_t = -m21_t * ra;
+        float beta_tt = -m21_tt * ra;
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(1 - ra * ra * m11));
+        float gamma_tt = 0;
+
+        Vector3 n = alpha * sa +
+                    beta * st +
+                    gamma * sNormal;
+        Vector3 nt = alpha * sat + alpha_t * sa +
+                     beta * stt + beta_t * st +
+                     gamma * sNormal_t + gamma_t * sNormal;
+        Vector3 ntt = alpha_t * sat + alpha * satt + alpha_tt * sa + alpha_t * sat +
+                      beta_t * stt + beta * sttt + beta_tt * st + beta_t * st +
+                      gamma_t * sNormal_t + gamma * sNormal_tt + gamma_tt * sNormal + gamma_t * sNormal_t;
+        return MathUtility.NormalVectorDerivative2(n, nt, ntt);
+    }
+
     public void UpdateEnvelope()
     {
         GenerateMeshData().CreateMesh(mesh);
@@ -383,6 +467,7 @@ public class Envelope : MonoBehaviour
             Vector3 aXat = -Vector3.Cross(axis, axis_t);
             Vector3 s = p + a * axis;
             Vector3 x = GetEnvelopeAt(t, a);
+            Vector3 xt = GetEnvelopeDtAt(t, a);
             Vector3 n = CalculateNormalAt(t, a);
             Vector3 nt = CalculateNormalDtAt(t, a);
             // Axis
@@ -404,6 +489,10 @@ public class Envelope : MonoBehaviour
             Gizmos.DrawLine(s, s + Vector3.Cross(n, axis));
             Gizmos.DrawLine(s, s + Vector3.Cross(n, axis_t));
 
+            // Envelope
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(x, x + xt);
+
             if (IsAxisConstrained)
             {
                 Vector3 x1x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
@@ -422,6 +511,10 @@ public class Envelope : MonoBehaviour
     {
         if (adjacentEnvelopeA0 == this) adjacentEnvelopeA0 = null;
         if (adjacentEnvelopeA1 == this || adjacentEnvelopeA1 == adjacentEnvelopeA0) adjacentEnvelopeA1 = null;
+        if (Application.isPlaying && IsPositionContinuous)
+        {
+            Debug.Log(Vector3.Angle(GetToolAxisAt(t), adjacentEnvelopeA0.GetToolAxisAt(t)));
+        }
         if (Application.isPlaying && IsTangentContinuous)
         {
             Debug.Log("Angle A2 n1_t " + Vector3.Angle(GetToolAxisAt(t), -adjacentEnvelopeA0.CalculateNormalDtAt(t, 1)));
