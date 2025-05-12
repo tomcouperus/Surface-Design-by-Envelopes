@@ -400,12 +400,14 @@ MonoBehaviour:
   mesh: {fileID: 0}
   sphere: {fileID: 882899706}
   toolAxisT0: {x: 0, y: 1, z: 0}
-  toolAxisT1: {x: 0, y: 1, z: 0}
+  toolAxisT1: {x: 0, y: 1, z: 1}
   toolRadius: 0.5
   toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
   tangentContinuity: 0
+  toolAxisDegreeT0: 0
+  toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
   t: 0.4
@@ -1014,6 +1016,8 @@ MonoBehaviour:
   adjacentEnvelopeA0: {fileID: 637717021}
   adjacentEnvelopeA1: {fileID: 0}
   tangentContinuity: 0
+  toolAxisDegreeT0: 0
+  toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
   t: 0.4
