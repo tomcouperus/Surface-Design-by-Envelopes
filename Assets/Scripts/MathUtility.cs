@@ -52,6 +52,14 @@ public class MathUtility
         return ddb;
     }
 
+    /// <summary>
+    /// Calculates the third derivative of a normalized vector.
+    /// </summary>
+    /// <param name="a">The unnormalized vector</param>
+    /// <param name="da">The derivative of the unnormalized vector</param>
+    /// <param name="dda">The second derivative of the unnormalized vector</param>
+    /// <param name="ddda">The third derivative of the unnormalized vector</param>
+    /// <returns></returns>
     public static Vector3 NormalVectorDerivative3(Vector3 a, Vector3 da, Vector3 dda, Vector3 ddda)
     {
         // Unit vector b
