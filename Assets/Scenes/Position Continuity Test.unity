@@ -401,7 +401,7 @@ MonoBehaviour:
   sphere: {fileID: 882899706}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 1}
-  toolRadius: 1
+  toolRadius: 0.5
   toolHeight: 1
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}

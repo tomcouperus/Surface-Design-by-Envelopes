@@ -193,7 +193,14 @@ public class Envelope : MonoBehaviour
     public Vector3 GetToolPathDt2At(float t)
     {
         // Need to check if these are required for chaining position continuous envelopes
-        return toolPath.EvaluateDerivative2(t);
+        if (IsTangentContinuous)
+        {
+            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) + GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1);
+        }
+        else
+        {
+            return toolPath.EvaluateDerivative2(t);
+        }
     }
 
     public Vector3 GetToolPathDt3At(float t)
@@ -214,24 +221,28 @@ public class Envelope : MonoBehaviour
     }
 
     /// <summary>
-    /// Calculates the rotation of the tool axis when the envelope is tangent continuous.
+    /// Calculates a quaternion that rotates the axis of the constraining envelope in such a way to achieve tangent continuity for this envelope.
     /// </summary>
     /// <param name="t"></param>
     /// <returns></returns>
     public Quaternion CalculateToolAxisRotationAt(float t)
     {
         if (!IsTangentContinuous) return Quaternion.identity;
-        // First rotate w.r.t. tangent continuity. Which rotates around the cross product of the adjacent normal and axis
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+        // First rotate the axis of the previous envelope to its normal. 
+        // This is to establish a frame of reference for all its derivatives. TODO hopefully
         Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
         Vector3 adjAxis = adjacentEnvelopeA0.GetToolAxisAt(t);
-        Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
-        Quaternion rotation = Quaternion.AngleAxis(degrees, rotationAxis);
+        Quaternion rotationFrame = Quaternion.FromToRotation(adjAxis, adjNormal);
 
-        // Then rotate w.r.t. the last freedom: around the normal of the previous envelope.
+        // Then rotate w.r.t. tangent continuity. Which rotates around the cross product of the adjacent normal and axis
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+        Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
+        Quaternion rotationTangent = Quaternion.AngleAxis(degrees, rotationAxis);
+
+        // Lastly rotate w.r.t. the last freedom: around the normal of the previous envelope.
         float angle = Mathf.Lerp(toolAxisDegreeT0, toolAxisDegreeT1, t);
         Quaternion rotationFree = Quaternion.AngleAxis(angle, adjNormal);
-        return rotationFree * rotation;
+        return rotationFree * rotationTangent * rotationFrame;
     }
 
     public Vector3 GetToolAxisAt(float t)
@@ -245,7 +256,7 @@ public class Envelope : MonoBehaviour
         else if (IsTangentContinuous)
         {
             // Rotate the normal of the adjacent envelope around the cross product with the axis of the adjacent envelope
-            axis = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.CalculateNormalAt(t, 1);
+            axis = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.GetToolAxisAt(t);
         }
         else
         {
@@ -267,19 +278,7 @@ public class Envelope : MonoBehaviour
         else if (IsTangentContinuous)
         {
             // TODO There is still a slight div by 0 error here. 
-            axis = GetToolAxisAt(t);
-            Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
-            Vector3 adjNormal_t = adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
-            axis_t.x = axis.x * adjNormal_t.x;
-            if (axis_t.x != 0) axis_t.x /= adjNormal.x;
-
-            axis_t.y = axis.y * adjNormal_t.y;
-            if (axis_t.y != 0) axis_t.y /= adjNormal.y;
-
-            axis_t.z = axis.z * adjNormal_t.z;
-            if (axis_t.z != 0) axis_t.z /= adjNormal.z;
-
-            axis_t *= -1;
+            axis_t = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.GetToolAxisDtAt(t);
         }
         else
         {
@@ -292,11 +291,20 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDt2At(float t)
     {
+        Vector3 axis, axis_t, axis_tt;
         // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
-        Vector3 axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
-        Vector3 axis_t = toolAxisT1 - toolAxisT0;
-        Vector3 axis_tt = Vector3.zero;
-        return MathUtility.NormalVectorDerivative2(axis, axis_t, axis_tt);
+        if (IsTangentContinuous)
+        {
+            axis_tt = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.GetToolAxisDt2At(t);
+        }
+        else
+        {
+            axis = Vector3.Lerp(toolAxisT0, toolAxisT1, t);
+            axis_t = toolAxisT1 - toolAxisT0;
+            axis_tt = Vector3.zero;
+            axis_tt = MathUtility.NormalVectorDerivative2(axis, axis_t, axis_tt);
+        }
+        return axis_tt;
     }
 
     public Vector3 GetToolAxisDt3At(float t)
@@ -487,7 +495,7 @@ public class Envelope : MonoBehaviour
             // Cross products
             Gizmos.color = Color.black;
             Gizmos.DrawLine(s, s + Vector3.Cross(n, axis));
-            Gizmos.DrawLine(s, s + Vector3.Cross(n, axis_t));
+            // Gizmos.DrawLine(s, s + Vector3.Cross(n, axis_t));
 
             // Envelope
             Gizmos.color = Color.red;
@@ -517,6 +525,8 @@ public class Envelope : MonoBehaviour
         }
         if (Application.isPlaying && IsTangentContinuous)
         {
+            Debug.Log("A2" + GetToolAxisAt(t));
+            Debug.Log("A2_t" + GetToolAxisDtAt(t));
             Debug.Log("Angle A2 n1_t " + Vector3.Angle(GetToolAxisAt(t), -adjacentEnvelopeA0.CalculateNormalDtAt(t, 1)));
             Debug.Log("A2 . n1_t " + Vector3.Dot(GetToolAxisAt(t), -adjacentEnvelopeA0.CalculateNormalDtAt(t, 1)));
             Debug.Log("A2_t . n1 " + Vector3.Dot(GetToolAxisDtAt(t), -adjacentEnvelopeA0.CalculateNormalAt(t, 1)));
