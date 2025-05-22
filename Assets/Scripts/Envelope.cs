@@ -77,16 +77,6 @@ public class Envelope : MonoBehaviour
     {
         UpdateTool();
         UpdateSphere();
-
-        if (IsTangentContinuous)
-        {
-            Vector3 axis = GetToolAxisAt(t);
-            Vector3 axisAdj = adjacentEnvelopeA0.GetToolAxisAt(t);
-            Vector3 normal = CalculateNormalAt(t, a);
-            Debug.Log("Angle A_1 n_1 " + (Vector3.Angle(axis, normal) - 90));
-            Debug.Log("Angle A_1 A_2 " + (Vector3.Angle(axis, axisAdj)));
-
-        }
     }
 
     private void UpdateTool()
@@ -167,7 +157,7 @@ public class Envelope : MonoBehaviour
         Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
         Quaternion rotationFrame = Quaternion.FromToRotation(adjNormal, axis_x_adjEnv_t);
 
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0)) - 90;
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0)) - 90;
         Quaternion rotation = Quaternion.AngleAxis(degrees, -adjEnv_t);
 
         return rotation * rotationFrame;
@@ -177,7 +167,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1);
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -199,7 +189,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
+            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -226,7 +216,7 @@ public class Envelope : MonoBehaviour
         // Need to check if these are required for chaining position continuous envelopes
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1);
+            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
         }
         else
         {
@@ -265,7 +255,7 @@ public class Envelope : MonoBehaviour
         Quaternion rotationFrame = Quaternion.FromToRotation(adjAxis, adjNormal);
 
         // Then rotate w.r.t. tangent continuity. Which rotates around the cross product of the adjacent normal and axis
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0));
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0));
         Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
         Quaternion rotationTangent = Quaternion.AngleAxis(degrees, rotationAxis);
 
