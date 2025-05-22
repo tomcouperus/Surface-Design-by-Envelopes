@@ -24,6 +24,7 @@ public class EnvelopeEditor : Editor
         {
             envelope.UpdatePath();
             envelope.UpdateEnvelope();
+            envelope.tool.UpdateTool();
         }
         if (GUILayout.Button("Test"))
         {

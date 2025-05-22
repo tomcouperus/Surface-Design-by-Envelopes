@@ -174,7 +174,7 @@ MonoBehaviour:
   mesh: {fileID: 0}
   sphere: {fileID: 882899706}
   toolAxisT0: {x: 0, y: 1, z: 0}
-  toolAxisT1: {x: 0, y: 0, z: 1}
+  toolAxisT1: {x: 0, y: 1, z: 0}
   tool: {fileID: 846706682}
   adjacentEnvelopeA0: {fileID: 0}
   adjacentEnvelopeA1: {fileID: 0}
@@ -378,11 +378,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 0}
-  tSectors: 50
-  aSectors: 20
+  tSectors: 100
+  aSectors: 40
   height: 1
   radius: 0.5
-  openingAngle: 0
+  openingAngle: 45
 --- !u!33 &846706683
 MeshFilter:
   m_ObjectHideFlags: 0

@@ -18,14 +18,7 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     private Vector3 toolAxisT1 = Vector3.up + Vector3.forward / 2;
     private BezierCurve toolPath;
-    [SerializeField]
-    private float toolRadius = 0.5f;
-    [SerializeField]
-    [Range(0, 45)]
-    private float toolOpeningAngle = 0;
-    [SerializeField]
-    private float toolHeight = 1;
-    private Tool tool;
+    public Tool tool;
 
     [Header("Constraints")]
     [SerializeField]
@@ -41,8 +34,10 @@ public class Envelope : MonoBehaviour
 
     [Header("Render")]
     [SerializeField]
+    [Min(1)]
     private int tSectors = 50;
     [SerializeField]
+    [Min(1)]
     private int aSectors = 20;
     [SerializeField]
     [Range(0, 1)]
@@ -64,7 +59,6 @@ public class Envelope : MonoBehaviour
     private void Awake()
     {
         toolPath = GetComponentInChildren<BezierCurve>();
-        tool = GetComponentInChildren<Tool>();
 
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         mesh = new();
@@ -83,6 +77,16 @@ public class Envelope : MonoBehaviour
     {
         UpdateTool();
         UpdateSphere();
+
+        if (IsTangentContinuous)
+        {
+            Vector3 axis = GetToolAxisAt(t);
+            Vector3 axisAdj = adjacentEnvelopeA0.GetToolAxisAt(t);
+            Vector3 normal = CalculateNormalAt(t, a);
+            Debug.Log("Angle A_1 n_1 " + (Vector3.Angle(axis, normal) - 90));
+            Debug.Log("Angle A_1 A_2 " + (Vector3.Angle(axis, axisAdj)));
+
+        }
     }
 
     private void UpdateTool()
@@ -90,7 +94,6 @@ public class Envelope : MonoBehaviour
         // This function should ideally be on the Tool class, but keep it here for now for convenience
         tool.gameObject.SetActive(showTool);
         if (!showTool) return;
-        tool.transform.localScale = new Vector3(GetToolRadiusAt(0) * 2, toolHeight, GetToolRadiusAt(0) * 2);
         tool.transform.localPosition = GetToolPathAt(t);
         tool.transform.rotation = Quaternion.LookRotation(GetToolAxisAt(t)) * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
     }
@@ -100,8 +103,9 @@ public class Envelope : MonoBehaviour
         // This function should ideally be on the Sphere, but keep it here for now for convenience
         if (sphere == null) return;
         sphere.SetActive(showSphere);
-        sphere.transform.localScale = new Vector3(GetToolRadiusAt(a), GetToolRadiusAt(a), GetToolRadiusAt(a));
-        sphere.transform.localPosition = GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t);
+        float r = tool.GetSphereRadiusAt(a);
+        sphere.transform.localScale = new Vector3(r, r, r);
+        sphere.transform.localPosition = GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t);
     }
 
     private MeshData GenerateMeshData()
@@ -111,9 +115,9 @@ public class Envelope : MonoBehaviour
         MeshData data = new MeshData(tSectors + 1, aSectors + 1);
         for (int tIdx = 0; tIdx <= tSectors; tIdx++)
         {
+            float t = (float)tIdx / tSectors;
             for (int aIdx = 0; aIdx <= aSectors; aIdx++)
             {
-                float t = (float)tIdx / tSectors;
                 float a = (float)aIdx / aSectors;
 
                 Vector3 vertex = GetEnvelopeAt(t, a);
@@ -138,17 +142,17 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetEnvelopeAt(float t, float a)
     {
-        return GetToolPathAt(t) + a * toolHeight * GetToolAxisAt(t) + GetToolRadiusAt(a) * CalculateNormalAt(t, a);
+        return GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t) + GetToolRadiusAt(a) * CalculateNormalAt(t, a);
     }
 
     public Vector3 GetEnvelopeDtAt(float t, float a)
     {
-        return GetToolPathDtAt(t) + a * toolHeight * GetToolAxisDtAt(t) + GetToolRadiusAt(a) * CalculateNormalDtAt(t, a);
+        return GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t) + GetToolRadiusAt(a) * CalculateNormalDtAt(t, a);
     }
 
     public Vector3 GetEnvelopeDt2At(float t, float a)
     {
-        return GetToolPathDt2At(t) + a * toolHeight * GetToolAxisDt2At(t) + GetToolRadiusAt(a) * CalculateNormalDt2At(t, a);
+        return GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t) + GetToolRadiusAt(a) * CalculateNormalDt2At(t, a);
     }
 
     public Quaternion CalculateNormalRotation(float t)
@@ -238,15 +242,12 @@ public class Envelope : MonoBehaviour
 
     public float GetToolRadiusAt(float a)
     {
-        float angle = toolOpeningAngle * Mathf.Deg2Rad;
-        return toolRadius * Mathf.Cos(angle) + a * toolHeight * Mathf.Sin(angle);
+        return tool.GetSphereRadiusAt(a);
     }
 
     public float GetToolRadiusDaAt(float a)
     {
-        // Todo replace with actual derivate. Is fixed for now
-        float angle = toolOpeningAngle * Mathf.Deg2Rad;
-        return toolHeight * Mathf.Sin(angle);
+        return tool.GetSphereRadiusDaAt(a);
     }
 
     /// <summary>
@@ -359,8 +360,8 @@ public class Envelope : MonoBehaviour
     // Expects t in [0, 1] and a in [0, 1]
     public Vector3 CalculateNormalAt(float t, float a)
     {
-        Vector3 sa = toolHeight * GetToolAxisAt(t);
-        Vector3 st = GetToolPathDtAt(t) + a * toolHeight * GetToolAxisDtAt(t);
+        Vector3 sa = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisAt(t);
+        Vector3 st = GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
         float ra = GetToolRadiusDaAt(a);
@@ -383,10 +384,10 @@ public class Envelope : MonoBehaviour
 
     public Vector3 CalculateNormalDtAt(float t, float a)
     {
-        Vector3 sa = toolHeight * GetToolAxisAt(t);
-        Vector3 sat = toolHeight * GetToolAxisDtAt(t);
-        Vector3 st = GetToolPathDtAt(t) + a * toolHeight * GetToolAxisDtAt(t);
-        Vector3 stt = GetToolPathDt2At(t) + a * toolHeight * GetToolAxisDt2At(t);
+        Vector3 sa = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisAt(t);
+        Vector3 sat = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisDtAt(t);
+        Vector3 st = GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t);
+        Vector3 stt = GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
         Vector3 sNormal_t = MathUtility.NormalVectorDerivative(Vector3.Cross(sa, st), Vector3.Cross(sat, st) + Vector3.Cross(sa, stt));
 
@@ -420,12 +421,12 @@ public class Envelope : MonoBehaviour
 
     public Vector3 CalculateNormalDt2At(float t, float a)
     {
-        Vector3 sa = toolHeight * GetToolAxisAt(t);
-        Vector3 sat = toolHeight * GetToolAxisDtAt(t);
-        Vector3 satt = toolHeight * GetToolAxisDt2At(t);
-        Vector3 st = GetToolPathDtAt(t) + a * toolHeight * GetToolAxisDtAt(t);
-        Vector3 stt = GetToolPathDt2At(t) + a * toolHeight * GetToolAxisDt2At(t);
-        Vector3 sttt = GetToolPathDt3At(t) + a * toolHeight * GetToolAxisDt3At(t);
+        Vector3 sa = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisAt(t);
+        Vector3 sat = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisDtAt(t);
+        Vector3 satt = tool.GetSphereCenterHeightDaAt(a) * GetToolAxisDt2At(t);
+        Vector3 st = GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t);
+        Vector3 stt = GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t);
+        Vector3 sttt = GetToolPathDt3At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt3At(t);
         Vector3 sNormal = Vector3.Cross(sa, st);
         Vector3 sNormal_t = Vector3.Cross(sat, st) + Vector3.Cross(sa, stt);
         Vector3 sNormal_tt = Vector3.Cross(satt, st) + Vector3.Cross(sat, stt) + Vector3.Cross(sat, stt) + Vector3.Cross(sa, sttt);
@@ -465,7 +466,9 @@ public class Envelope : MonoBehaviour
         float beta_tt = -m21_tt * ra;
         float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
         float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(1 - ra * ra * m11));
-        float gamma_tt = 0; // TODO
+        float gamma_tt = (EG_FF > 0 ? 1 : -1) *
+                         (2 * Mathf.Sqrt(1 - ra * ra * m11) * -ra * ra * m11_tt - ra * ra * ra * ra * m11_t * m11_t / Mathf.Sqrt(1 - ra * ra * m11)) /
+                         (4 - 4 * ra * ra * m11);
 
         Vector3 n = alpha * sa +
                     beta * st +
@@ -503,7 +506,7 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         if (Application.isPlaying)
         {
@@ -511,7 +514,7 @@ public class Envelope : MonoBehaviour
             Vector3 axis = GetToolAxisAt(t);
             Vector3 axis_t = GetToolAxisDtAt(t);
             Vector3 aXat = -Vector3.Cross(axis, axis_t);
-            Vector3 s = p + a * toolHeight * axis;
+            Vector3 s = p + tool.GetSphereCenterHeightAt(a) * axis;
             Vector3 x = GetEnvelopeAt(t, a);
             Vector3 xt = GetEnvelopeDtAt(t, a);
             Vector3 n = CalculateNormalAt(t, a);
@@ -615,12 +618,6 @@ public class Envelope : MonoBehaviour
                 }
                 else if (IsTangentContinuous)
                 {
-                    Debug.Log("A2" + axis);
-                    Debug.Log("A2_t" + axis_t);
-                    Debug.Log("Angle A2 n1_t " + Vector3.Angle(axis, -adj0_n_t_1));
-                    Debug.Log("A2 . n1_t " + Vector3.Dot(axis, -adj0_n_t_1));
-                    Debug.Log("A2_t . n1 " + Vector3.Dot(axis_t, -adj0_n_1));
-                    Debug.Log("A2 . A2_t " + Vector3.Dot(axis, axis_t));
                 }
             }
         }

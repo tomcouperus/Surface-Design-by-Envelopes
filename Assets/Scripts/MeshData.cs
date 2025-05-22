@@ -11,12 +11,15 @@ public class MeshData
     int[] triangles;
     int triangleIndex;
 
-    public MeshData(int xVertices, int yVertices)
+    public MeshData(int xVertices, int yVertices, bool xWrap = false)
     {
         vertices = new Vector3[xVertices * yVertices];
         uvs = new Vector2[vertices.Length];
 
-        triangles = new int[(xVertices - 1) * (yVertices - 1) * 6];
+        int numTriangles;
+        if (!xWrap) numTriangles = (xVertices - 1) * (yVertices - 1);
+        else numTriangles = xVertices * (yVertices - 1);
+        triangles = new int[numTriangles * 6];
         triangleIndex = 0;
     }
 
