@@ -9,30 +9,30 @@ public class Tool_Cone : Tool
 
     public override float GetSphereCenterHeightAt(float a)
     {
-        return a * height + GetToolRadiusAt(a) * Mathf.Tan(OpeningRad);
+        return a * height + GetRadiusAt(a) * Mathf.Tan(OpeningRad);
     }
 
     public override float GetSphereCenterHeightDaAt(float a)
     {
-        return height + GetToolRadiusDaAt(a) * Mathf.Tan(OpeningRad);
+        return height + GetRadiusDaAt(a) * Mathf.Tan(OpeningRad);
     }
 
     public override float GetSphereRadiusAt(float a)
     {
-        return GetToolRadiusAt(a) / Mathf.Cos(OpeningRad);
+        return GetRadiusAt(a) / Mathf.Cos(OpeningRad);
     }
 
     public override float GetSphereRadiusDaAt(float a)
     {
-        return GetToolRadiusDaAt(a) / Mathf.Cos(OpeningRad);
+        return GetRadiusDaAt(a) / Mathf.Cos(OpeningRad);
     }
 
-    protected override float GetToolRadiusAt(float a)
+    public override float GetRadiusAt(float a)
     {
         return radius + a * height * Mathf.Tan(OpeningRad);
     }
 
-    protected override float GetToolRadiusDaAt(float a)
+    public override float GetRadiusDaAt(float a)
     {
         return height * Mathf.Tan(OpeningRad);
     }
@@ -40,7 +40,7 @@ public class Tool_Cone : Tool
     protected override Vector3 GetToolSurfaceAt(float t, float a)
     {
         float tRad = t * 2 * Mathf.PI;
-        float r = GetToolRadiusAt(a);
+        float r = GetRadiusAt(a);
         return new Vector3(
             r * Mathf.Cos(tRad),
             a * height,

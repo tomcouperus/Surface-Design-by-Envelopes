@@ -83,9 +83,9 @@ public abstract class Tool : MonoBehaviour
 
     protected abstract Vector3 GetToolSurfaceAt(float t, float a);
 
-    protected abstract float GetToolRadiusAt(float a);
+    public abstract float GetRadiusAt(float a);
 
-    protected abstract float GetToolRadiusDaAt(float a);
+    public abstract float GetRadiusDaAt(float a);
 
     public abstract float GetSphereCenterHeightAt(float a);
 

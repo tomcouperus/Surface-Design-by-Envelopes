@@ -335,8 +335,8 @@ MonoBehaviour:
   toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
-  t: 0.4
-  a: 0
+  t: 0
+  a: 1
   showTool: 0
   showSphere: 0
 --- !u!33 &637717022
@@ -873,7 +873,7 @@ MonoBehaviour:
   mesh: {fileID: 0}
   sphere: {fileID: 2147130313}
   toolAxisT0: {x: 0, y: 1, z: 0}
-  toolAxisT1: {x: 0, y: 0, z: 1}
+  toolAxisT1: {x: 0, y: 1, z: 0}
   tool: {fileID: 1968243793}
   adjacentEnvelopeA0: {fileID: 637717021}
   adjacentEnvelopeA1: {fileID: 0}
@@ -882,7 +882,7 @@ MonoBehaviour:
   toolAxisDegreeT1: 0
   tSectors: 300
   aSectors: 80
-  t: 0.4
+  t: 0
   a: 0
   showTool: 0
   showSphere: 0

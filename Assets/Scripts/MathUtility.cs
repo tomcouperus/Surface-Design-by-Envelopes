@@ -93,4 +93,36 @@ public class MathUtility
 
         return dddb;
     }
+
+    /// <summary>
+    /// Find the unit vector that is perpendicular to one vector, and at an angle to another.
+    /// I.e.
+    /// Find U such that U dot V = 0 and U dot W = f, where V, W, and f are known.
+    /// </summary>
+    /// <param name="perpVec"></param>
+    /// <param name="dotVec"></param>
+    /// <param name="dotValue"></param>
+    /// <returns></returns>
+    public static Vector3 VectorPerpAndDotProduct(Vector3 perpVec, Vector3 dotVec, float dotValue)
+    {
+        // Derived from the rotation matrix of an angle around an arbitrary unit axis, and trigonometric identities.
+        Vector3 f = perpVec.normalized;
+        Vector3 g = dotVec.normalized;
+        Vector3 k = Vector3.Cross(f, g).normalized;
+
+        float A = k.x * g.x * (1 - f.x * f.x) - k.x * g.y * f.x * f.y - k.x * g.z * f.x * f.z +
+                  -k.y * g.x * f.x * f.y + k.y * g.y * (1 - f.y * f.y) - k.y * g.z * f.y * f.z +
+                  -k.z * g.x * f.x * f.z - k.z * g.y * f.y * f.z + k.z * g.z * (1 - f.z * f.z);
+        float B = -k.x * g.y * f.z + k.x * g.z * f.y +
+                  k.y * g.x * f.z - k.y * g.z * f.x +
+                  -k.z * g.x * f.y + k.z * g.y * f.x;
+        float C = k.x * g.x * f.x * f.x + k.x * g.y * f.x * f.y + k.x * g.z * f.x * f.z +
+                  k.y * g.x * f.x * f.y + k.y * g.y * f.y * f.y + k.y * g.z * f.y * f.z +
+                  k.z * g.x * f.x * f.z + k.z * g.y * f.y * f.z + k.z * g.z * f.z * f.z -
+                  dotValue;
+
+        float angle = Mathf.Acos(-C / Mathf.Sqrt(A * A + B * B)) + Mathf.Atan2(B, A);
+
+        return Quaternion.AngleAxis(-angle * Mathf.Rad2Deg, perpVec) * k;
+    }
 }

@@ -132,17 +132,17 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetEnvelopeAt(float t, float a)
     {
-        return GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t) + GetToolRadiusAt(a) * CalculateNormalAt(t, a);
+        return GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t) + GetSphereRadiusAt(a) * CalculateNormalAt(t, a);
     }
 
     public Vector3 GetEnvelopeDtAt(float t, float a)
     {
-        return GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t) + GetToolRadiusAt(a) * CalculateNormalDtAt(t, a);
+        return GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t) + GetSphereRadiusAt(a) * CalculateNormalDtAt(t, a);
     }
 
     public Vector3 GetEnvelopeDt2At(float t, float a)
     {
-        return GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t) + GetToolRadiusAt(a) * CalculateNormalDt2At(t, a);
+        return GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t) + GetSphereRadiusAt(a) * CalculateNormalDt2At(t, a);
     }
 
     public Quaternion CalculateNormalRotation(float t)
@@ -157,7 +157,8 @@ public class Envelope : MonoBehaviour
         Vector3 adjNormal = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
         Quaternion rotationFrame = Quaternion.FromToRotation(adjNormal, axis_x_adjEnv_t);
 
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0)) - 90;
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0)) - 90;
+        Vector3 rotationAxis = Vector3.Cross(adjNormal, axis_x_adjEnv_t);
         Quaternion rotation = Quaternion.AngleAxis(degrees, -adjEnv_t);
 
         return rotation * rotationFrame;
@@ -167,7 +168,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -175,9 +176,11 @@ public class Envelope : MonoBehaviour
             // Thus, start with the normal of the adjacent envelope (also orthogonal to X_t of the adjacent envelope by definition),
             // and rotate it around X_t of the adjacent envelope until the angle with the axis is achieved.
             // TODO does not actually work yet. Only works for cylindrical case for now, but that is enough for my purposes. If time allows, will expand.
-            Vector3 normal = Vector3.Cross(GetToolAxisAt(t), adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1)).normalized;
-            // Vector3 normal = CalculateNormalRotation(t) * adjacentEnvelopeA0.CalculateNormalAt(t, 1);
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetToolRadiusAt(0) * normal;
+            Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 axis = GetToolAxisAt(t);
+            float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+            Vector3 normal = MathUtility.VectorPerpAndDotProduct(adjEnv_t, axis, dotValue);
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - tool.GetSphereRadiusAt(0) * normal - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
         }
         else
         {
@@ -189,7 +192,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
+            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -203,7 +206,7 @@ public class Envelope : MonoBehaviour
             normal_t = MathUtility.NormalVectorDerivative(normal, normal_t);
             // Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
             // Vector3 normal_t = CalculateNormalRotation(t) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
-            return adjEnv_t - GetToolRadiusAt(0) * normal_t;
+            return adjEnv_t - tool.GetRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
         }
         else
         {
@@ -216,7 +219,7 @@ public class Envelope : MonoBehaviour
         // Need to check if these are required for chaining position continuous envelopes
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetToolRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
+            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
         }
         else
         {
@@ -230,12 +233,12 @@ public class Envelope : MonoBehaviour
         return toolPath.EvaluateDerivative3(t);
     }
 
-    public float GetToolRadiusAt(float a)
+    public float GetSphereRadiusAt(float a)
     {
         return tool.GetSphereRadiusAt(a);
     }
 
-    public float GetToolRadiusDaAt(float a)
+    public float GetSphereRadiusDaAt(float a)
     {
         return tool.GetSphereRadiusDaAt(a);
     }
@@ -255,7 +258,7 @@ public class Envelope : MonoBehaviour
         Quaternion rotationFrame = Quaternion.FromToRotation(adjAxis, adjNormal);
 
         // Then rotate w.r.t. tangent continuity. Which rotates around the cross product of the adjacent normal and axis
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetToolRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0));
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0));
         Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
         Quaternion rotationTangent = Quaternion.AngleAxis(degrees, rotationAxis);
 
@@ -354,7 +357,7 @@ public class Envelope : MonoBehaviour
         Vector3 st = GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
-        float ra = GetToolRadiusDaAt(a);
+        float ra = GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float F = Vector3.Dot(sa, st);
@@ -381,7 +384,7 @@ public class Envelope : MonoBehaviour
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
         Vector3 sNormal_t = MathUtility.NormalVectorDerivative(Vector3.Cross(sa, st), Vector3.Cross(sat, st) + Vector3.Cross(sa, stt));
 
-        float ra = GetToolRadiusDaAt(a);
+        float ra = GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
@@ -424,7 +427,7 @@ public class Envelope : MonoBehaviour
         sNormal_t = MathUtility.NormalVectorDerivative(sNormal, sNormal_t);
         sNormal.Normalize();
 
-        float ra = GetToolRadiusDaAt(a);
+        float ra = GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
@@ -535,19 +538,13 @@ public class Envelope : MonoBehaviour
             if (IsPositionContinuous)
             {
                 Vector3 adjN_1 = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
-                Vector3 n_guess = CalculateNormalRotation(t) * adjN_1;
+                Vector3 adjEnv = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-                Vector3 axis_x_adjEnv_t_1 = Vector3.Cross(axis, adjEnv_t);
-                // Gizmos.color = Color.white;
-                // Gizmos.DrawLine(x, x + axis_x_adjEnv_t_1);
-                // Gizmos.color = Color.black;
-                // Gizmos.DrawLine(x, x + n_guess);
+                float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+                Vector3 n0_approx = MathUtility.VectorPerpAndDotProduct(adjEnv_t, axis, dotValue);
+                Gizmos.color = Color.black;
+                Gizmos.DrawLine(adjEnv, adjEnv - n0_approx);
 
-                // Debug.LogWarning("");
-                // Debug.Log(Vector3.Angle(adjEnv_t, n));
-                // Debug.Log(Vector3.Angle(adjEnv_t, n_guess));
-                // Debug.Log(Vector3.Angle(axis, n));
-                // Debug.Log(Vector3.Angle(axis, n_guess));
 
             }
 
@@ -582,6 +579,9 @@ public class Envelope : MonoBehaviour
             Vector3 n0 = CalculateNormalAt(t, 0);
             Vector3 n1 = CalculateNormalAt(t, 1);
             Vector3 nt = CalculateNormalDtAt(t, a);
+
+            Debug.Log(axis + " A(t)");
+            Debug.Log(xt + " X_t(t,a)");
 
             if (IsPositionContinuous)
             {
