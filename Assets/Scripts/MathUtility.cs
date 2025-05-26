@@ -97,7 +97,7 @@ public class MathUtility
     /// <summary>
     /// Find the unit vector that is perpendicular to one vector, and at an angle to another.
     /// I.e.
-    /// Find U such that U dot V = 0 and U dot W = f, where V, W, and f are known.
+    /// Find U such that U dot F = 0 and U dot G = p, where F, G, and p are known.
     /// </summary>
     /// <param name="perpVec"></param>
     /// <param name="dotVec"></param>
