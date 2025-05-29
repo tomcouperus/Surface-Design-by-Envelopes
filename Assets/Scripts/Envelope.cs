@@ -173,14 +173,13 @@ public class Envelope : MonoBehaviour
         else if (IsPositionContinuous)
         {
             // The normal is orthogonal to X_t of the adjacent envelope, and at an angle to the axis of its own envelope.
-            // Thus, start with the normal of the adjacent envelope (also orthogonal to X_t of the adjacent envelope by definition),
-            // and rotate it around X_t of the adjacent envelope until the angle with the axis is achieved.
-            // TODO does not actually work yet. Only works for cylindrical case for now, but that is enough for my purposes. If time allows, will expand.
+            // Thus start with the cross product of these two, and rotate it a certain amount around X_t of the adjacent.
+            Vector3 adjEnv = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
             Vector3 axis = GetToolAxisAt(t);
             float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
             Vector3 normal = MathUtility.VectorPerpAndDotProduct(adjEnv_t, axis, dotValue);
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - tool.GetSphereRadiusAt(0) * normal - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
+            return adjEnv - tool.GetSphereRadiusAt(0) * normal - tool.GetSphereCenterHeightAt(0) * axis;
         }
         else
         {
@@ -201,12 +200,9 @@ public class Envelope : MonoBehaviour
             Vector3 axis_t = GetToolAxisDtAt(t);
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
             Vector3 adjEnv_tt = adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1);
-            Vector3 normal = Vector3.Cross(axis, adjEnv_t);
-            Vector3 normal_t = Vector3.Cross(axis_t, adjEnv_t) + Vector3.Cross(axis, adjEnv_tt);
-            normal_t = MathUtility.NormalVectorDerivative(normal, normal_t);
-            // Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-            // Vector3 normal_t = CalculateNormalRotation(t) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1);
-            return adjEnv_t - tool.GetRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
+            float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+            Vector3 normal_t = MathUtility.VectorPerpAndDotProductDt(adjEnv_t, adjEnv_tt, axis, axis_t, dotValue);
+            return adjEnv_t - tool.GetRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * axis_t;
         }
         else
         {
@@ -504,6 +500,7 @@ public class Envelope : MonoBehaviour
         if (Application.isPlaying)
         {
             Vector3 p = GetToolPathAt(t);
+            Vector3 pt = GetToolPathDtAt(t);
             Vector3 axis = GetToolAxisAt(t);
             Vector3 axis_t = GetToolAxisDtAt(t);
             Vector3 aXat = -Vector3.Cross(axis, axis_t);
@@ -543,7 +540,7 @@ public class Envelope : MonoBehaviour
                 float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
                 Vector3 n0_approx = MathUtility.VectorPerpAndDotProduct(adjEnv_t, axis, dotValue);
                 Gizmos.color = Color.black;
-                Gizmos.DrawLine(adjEnv, adjEnv - n0_approx);
+                Gizmos.DrawLine(p, p + pt);
 
 
             }
@@ -552,7 +549,7 @@ public class Envelope : MonoBehaviour
             {
                 Vector3 x1x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 Vector3 x1x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-                Gizmos.color = Color.black;
+                Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(p, p + x1x2);
                 Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.white;
