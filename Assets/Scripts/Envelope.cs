@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
 public class Envelope : MonoBehaviour
 {
-
-    [SerializeField]
+    public string filename;
     private Mesh mesh;
     [SerializeField]
     private GameObject sphere;
@@ -31,6 +31,34 @@ public class Envelope : MonoBehaviour
     private float toolAxisDegreeT0;
     [SerializeField]
     private float toolAxisDegreeT1;
+
+    [Header("3-envelope C0 values")]
+    [SerializeField]
+    private Vector4 A_x_correction_poly;
+    [SerializeField]
+    private Vector4 A_y_correction_poly;
+    [SerializeField]
+    private Vector4 A_z_correction_poly;
+    private Vector3 GetAxisCorrectionAt(float t)
+    {
+        Vector3 correction;
+        float t3 = t * t * t;
+        float t2 = t * t;
+        correction.x = A_x_correction_poly.x * t3 + A_x_correction_poly.y * t2 + A_x_correction_poly.z * t + A_x_correction_poly.w;
+        correction.y = A_y_correction_poly.x * t3 + A_y_correction_poly.y * t2 + A_y_correction_poly.z * t + A_y_correction_poly.w;
+        correction.z = A_z_correction_poly.x * t3 + A_z_correction_poly.y * t2 + A_z_correction_poly.z * t + A_z_correction_poly.w;
+        return correction;
+    }
+
+    private Vector3 GetAxisCorrectionDtAt(float t)
+    {
+        Vector3 correction;
+        float t2 = t * t;
+        correction.x = 3 * A_x_correction_poly.x * t2 + 2 * A_x_correction_poly.y * t + A_x_correction_poly.z;
+        correction.y = 3 * A_y_correction_poly.x * t2 + 2 * A_y_correction_poly.y * t + A_y_correction_poly.z;
+        correction.z = 3 * A_z_correction_poly.x * t2 + 2 * A_z_correction_poly.y * t + A_z_correction_poly.z;
+        return correction;
+    }
 
     [Header("Render")]
     [SerializeField]
@@ -269,7 +297,12 @@ public class Envelope : MonoBehaviour
         Vector3 axis;
         if (IsAxisConstrained)
         {
-            axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 adjEnv0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 adjEnv0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 adjEnv1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+            Vector3 adjEnv1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+            Vector3 G = adjEnv1 - adjEnv0;
+            axis = G + GetAxisCorrectionAt(t);
             axis.Normalize();
         }
         else if (IsTangentContinuous)
@@ -290,13 +323,20 @@ public class Envelope : MonoBehaviour
         Vector3 axis, axis_t;
         if (IsAxisConstrained)
         {
-            axis = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            axis_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 adjEnv0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 adjEnv0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 adjEnv1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+            Vector3 adjEnv1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+            Vector3 G = adjEnv1 - adjEnv0;
+            Vector3 G_t = adjEnv1_t - adjEnv0_t;
+            // axis = adjEnv1 - adjEnv0 + GetAxisCorrectionAt(t);
+            axis = G + GetAxisCorrectionAt(t);
+            // axis_t = -Vector3.Cross(axis, G);
+            axis_t = G_t + GetAxisCorrectionDtAt(t);
             axis_t = MathUtility.NormalVectorDerivative(axis, axis_t);
         }
         else if (IsTangentContinuous)
         {
-            // TODO There is still a slight div by 0 error here. 
             axis_t = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.GetToolAxisDtAt(t);
         }
         else
@@ -311,7 +351,6 @@ public class Envelope : MonoBehaviour
     public Vector3 GetToolAxisDt2At(float t)
     {
         Vector3 axis, axis_t, axis_tt;
-        // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
         if (IsTangentContinuous)
         {
             axis_tt = CalculateToolAxisRotationAt(t) * adjacentEnvelopeA0.GetToolAxisDt2At(t);
@@ -554,6 +593,10 @@ public class Envelope : MonoBehaviour
                 Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.white;
                 Gizmos.DrawLine(p, p + axis + aXat);
+
+                // Gizmos.color = Color.red;
+                // Gizmos.DrawLine(p, p + axis + GetAxisCorrectionAt(t));
+                // Gizmos.DrawLine(p, p + axis_t + GetAxisCorrectionDtAt(t));
             }
 
         }
@@ -602,11 +645,41 @@ public class Envelope : MonoBehaviour
                     Debug.Log(Vector3.Angle(n1, axis) + " Angle n(t,1) A(t)");
                     Debug.Log(Vector3.Angle(n0, adj0_env_t_1) + " Angle n(t,0) X0_t(t,1)");
                     Debug.Log(Vector3.Angle(n1, adj1_env_t_0) + " Angle n(t,1) X1_t(t,0)");
+                    Debug.Log(Vector3.Angle(axis, axis_t) + " Angle A(t) A_t(t)");
                 }
                 else if (IsTangentContinuous)
                 {
                 }
             }
         }
+    }
+
+    public void ExportTestData()
+    {
+        if (!IsAxisConstrained) return;
+        if (filename == "") return;
+        string file = Application.dataPath + Path.DirectorySeparatorChar + filename + ".csv";
+        Debug.Log(file);
+        TextWriter tw = new StreamWriter(file, false);
+        tw.WriteLine("t,X1-x,X1-y,X1-z,X1_t-x,X1_t-y,X1_t-z,X3-x,X3-y,X3-z,X3_t-x,X3_t-y,X3_t-z");
+        tw.Close();
+
+        tw = new StreamWriter(file, true);
+        for (int tIdx = 0; tIdx <= tSectors; tIdx++)
+        {
+            float t = (float)tIdx / tSectors;
+            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 x1_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 x3 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+            Vector3 x3_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+
+            string line = t + "," +
+                          x1.x + "," + x1.y + "," + x1.z + "," +
+                          x1_t.x + "," + x1_t.y + "," + x1_t.z + "," +
+                          x3.x + "," + x3.y + "," + x3.z + "," +
+                          x3_t.x + "," + x3_t.y + "," + x3_t.z + ",";
+            tw.WriteLine(line);
+        }
+        tw.Close();
     }
 }

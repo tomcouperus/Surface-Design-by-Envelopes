@@ -28,11 +28,7 @@ public class EnvelopeEditor : Editor
         }
         if (GUILayout.Button("Test"))
         {
-            Debug.Log("Axis: " + envelope.GetToolAxisAt(envelope.getT()));
-            Debug.Log("d/dt Axis: " + envelope.GetToolAxisDtAt(envelope.getT()));
-            Debug.Log("d2/dt2 Axis: " + envelope.GetToolAxisDt2At(envelope.getT()));
-            Debug.Log("Normal: " + envelope.CalculateNormalAt(envelope.getT(), envelope.getA()));
-            Debug.Log("d/dt Normal: " + envelope.CalculateNormalDtAt(envelope.getT(), envelope.getA()));
+            envelope.ExportTestData();
         }
     }
 }
