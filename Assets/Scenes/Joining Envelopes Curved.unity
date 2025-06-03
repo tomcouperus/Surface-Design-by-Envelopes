@@ -163,9 +163,9 @@ MonoBehaviour:
   tangentContinuity: 0
   toolAxisDegreeT0: 0
   toolAxisDegreeT1: 0
-  A_x_correction_poly: {x: -0.102, y: 0.1764, z: 0.1596, w: 0}
-  A_y_correction_poly: {x: 0.0882, y: -0.1013, z: -0.138, w: -0.0004}
-  A_z_correction_poly: {x: -0.0092, y: 0.0562, z: 0.1774, w: -0.0004}
+  A_x_correction_poly: {x: -0.1221, y: 0.2984, z: 0.1362, w: 0.0013}
+  A_y_correction_poly: {x: -0.1015, y: -0.0484, z: -0.163, w: 0.0005}
+  A_z_correction_poly: {x: 0.1371, y: 0.029, z: 0.193, w: -0.0012}
   tSectors: 300
   aSectors: 80
   t: 0
