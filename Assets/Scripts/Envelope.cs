@@ -592,7 +592,7 @@ public class Envelope : MonoBehaviour
                 Gizmos.DrawLine(p, p + x1x2);
                 Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.white;
-                Gizmos.DrawLine(p, p + axis + aXat);
+                Gizmos.DrawLine(p, p + axis - aXat);
 
                 // Gizmos.color = Color.red;
                 // Gizmos.DrawLine(p, p + axis + GetAxisCorrectionAt(t));
@@ -639,7 +639,7 @@ public class Envelope : MonoBehaviour
                     Debug.LogWarning("Connect G0 debug");
                     Vector3 adj1_env_0 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
                     Vector3 adj1_env_t_0 = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
-                    Debug.Log(Vector3.Angle(adj1_env_0 - adj0_env_1, axis + aXat));
+                    Debug.Log(Vector3.Angle(adj1_env_0 - adj0_env_1, axis - aXat));
 
                     Debug.Log(Vector3.Angle(n0, axis) + " Angle n(t,0) A(t)");
                     Debug.Log(Vector3.Angle(n1, axis) + " Angle n(t,1) A(t)");
