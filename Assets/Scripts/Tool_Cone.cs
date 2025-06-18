@@ -37,9 +37,8 @@ public class Tool_Cone : Tool
         return height * Mathf.Tan(OpeningRad);
     }
 
-    protected override Vector3 GetToolSurfaceAt(float t, float a)
+    protected override Vector3 GetToolSurfaceAt(float tRad, float a)
     {
-        float tRad = t * 2 * Mathf.PI;
         float r = GetRadiusAt(a);
         return new Vector3(
             r * Mathf.Cos(tRad),

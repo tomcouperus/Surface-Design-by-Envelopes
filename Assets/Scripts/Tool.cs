@@ -50,7 +50,7 @@ public abstract class Tool : MonoBehaviour
             {
                 float t = (float)tIdx / tSectors;
 
-                Vector3 vertex = GetToolSurfaceAt(t, a);
+                Vector3 vertex = GetToolSurfaceAt(t * 2 * Mathf.PI, a);
                 Vector2 uv = new Vector2(t, a);
 
                 data.AddVertex(vertex, uv, vertexIndex);
@@ -81,7 +81,7 @@ public abstract class Tool : MonoBehaviour
         return data;
     }
 
-    protected abstract Vector3 GetToolSurfaceAt(float t, float a);
+    protected abstract Vector3 GetToolSurfaceAt(float tRad, float a);
 
     public abstract float GetRadiusAt(float a);
 
