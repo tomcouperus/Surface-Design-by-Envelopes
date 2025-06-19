@@ -218,7 +218,6 @@ public class Envelope : MonoBehaviour
         }
         else if (IsPositionContinuous)
         {
-            // TODO only works for cylindrical tool, due to the angle between the normal and the axis. General should be possible though
             Vector3 axis = GetToolAxisAt(t); // unit vector
             Vector3 axis_t = GetToolAxisDtAt(t); // derivative of unit vector
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1); // not yet unit vector
@@ -266,6 +265,7 @@ public class Envelope : MonoBehaviour
         {
             return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
         }
+        // TODO implement second derivative for g0 case to get envelope derivative properly
         else
         {
             return toolPath.EvaluateDerivative2(t);
@@ -654,6 +654,12 @@ public class Envelope : MonoBehaviour
                 Debug.LogWarning("G0 debug");
                 Debug.Log(Vector3.Angle(n0, axis) + " Angle n(t,0) A(t)");
                 Debug.Log(Vector3.Angle(n0, adj0_env_t_1) + " Angle n(t,0) X0_t(t,1)");
+                Debug.Log(Vector3.Angle(axis, adj0_env_t_1) + " Angle A(t) X0_t(t,1)");
+                Debug.Log(Mathf.Acos(tool.GetRadiusAt(0) / tool.GetSphereRadiusAt(0)) * Mathf.Rad2Deg);
+
+                float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+                Vector3 axis_proj_plane_adj0_t = axis - Vector3.Dot(axis, adj0_env_t_1) * adj0_env_t_1;
+                Debug.Log("Validity check: " + Mathf.Abs(dotValue) + " <= " + axis_proj_plane_adj0_t.magnitude);
                 if (IsAxisConstrained)
                 {
                     Debug.LogWarning("Connect G0 debug");
