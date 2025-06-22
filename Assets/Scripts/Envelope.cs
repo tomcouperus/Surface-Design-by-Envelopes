@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Palmmedia.ReportGenerator.Core.Reporting.Builders.Rendering;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
@@ -32,34 +33,6 @@ public class Envelope : MonoBehaviour
     [SerializeField]
     private float toolAxisDegreeT1;
 
-    [Header("3-envelope C0 values")]
-    [SerializeField]
-    private Vector4 A_x_correction_poly;
-    [SerializeField]
-    private Vector4 A_y_correction_poly;
-    [SerializeField]
-    private Vector4 A_z_correction_poly;
-    private Vector3 GetAxisCorrectionAt(float t)
-    {
-        Vector3 correction;
-        float t3 = t * t * t;
-        float t2 = t * t;
-        correction.x = A_x_correction_poly.x * t3 + A_x_correction_poly.y * t2 + A_x_correction_poly.z * t + A_x_correction_poly.w;
-        correction.y = A_y_correction_poly.x * t3 + A_y_correction_poly.y * t2 + A_y_correction_poly.z * t + A_y_correction_poly.w;
-        correction.z = A_z_correction_poly.x * t3 + A_z_correction_poly.y * t2 + A_z_correction_poly.z * t + A_z_correction_poly.w;
-        return correction;
-    }
-
-    private Vector3 GetAxisCorrectionDtAt(float t)
-    {
-        Vector3 correction;
-        float t2 = t * t;
-        correction.x = 3 * A_x_correction_poly.x * t2 + 2 * A_x_correction_poly.y * t + A_x_correction_poly.z;
-        correction.y = 3 * A_y_correction_poly.x * t2 + 2 * A_y_correction_poly.y * t + A_y_correction_poly.z;
-        correction.z = 3 * A_z_correction_poly.x * t2 + 2 * A_z_correction_poly.y * t + A_z_correction_poly.z;
-        return correction;
-    }
-
     [Header("Render")]
     [SerializeField]
     [Min(1)]
@@ -83,6 +56,8 @@ public class Envelope : MonoBehaviour
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
     public bool IsTangentContinuous { get { return IsPositionContinuous && tangentContinuity; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
+
+    static readonly float Sqrt2 = Mathf.Sqrt(2);
 
     private void Awake()
     {
@@ -249,7 +224,6 @@ public class Envelope : MonoBehaviour
 
             Vector3 normal_t = theta_t * (-s_theta * w1 + c_theta * w2) + c_theta * w1_t + s_theta * w2_t;
 
-
             return adjEnv_t - tool.GetRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * axis_t;
         }
         else
@@ -318,13 +292,34 @@ public class Envelope : MonoBehaviour
         Vector3 axis;
         if (IsAxisConstrained)
         {
-            Vector3 adjEnv0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            Vector3 adjEnv0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-            Vector3 adjEnv1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
-            Vector3 adjEnv1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
-            Vector3 G = adjEnv1 - adjEnv0;
-            axis = G + GetAxisCorrectionAt(t);
-            axis.Normalize();
+            Vector3 deltaX = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 deltaX_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 deltaX_hat_t = MathUtility.NormalVectorDerivative(deltaX, deltaX_t);
+            Vector3 deltaX_hat = deltaX.normalized;
+            deltaX = deltaX_hat * Sqrt2;
+            deltaX_t = deltaX_hat_t * Sqrt2;
+
+            // Values for defining the circle
+            Vector3 C = deltaX * 0.5f;
+            float r = 1 / Sqrt2;
+
+            // Make orthonormal frame on plane with normal = deltaX_hat
+            Vector3 v = Vector3.up;
+            if (v == deltaX_hat) v = Vector3.right;
+            Vector3 w1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
+            w1.Normalize();
+            Vector3 w2 = Vector3.Cross(deltaX_hat, w1);
+
+            // Finding point on circle
+            float A = Vector3.Dot(deltaX_t, w1);
+            float B = Vector3.Dot(deltaX_t, w2);
+
+            float phi = Mathf.Atan2(B, A);
+            float theta = phi - Mathf.Acos(r * Vector3.Dot(deltaX, deltaX_t) / Mathf.Sqrt(A * A + B * B));
+            float c_theta = Mathf.Cos(theta);
+            float s_theta = Mathf.Sin(theta);
+
+            axis = C + r * (w1 * c_theta + w2 * s_theta);
         }
         else if (IsTangentContinuous)
         {
@@ -344,16 +339,45 @@ public class Envelope : MonoBehaviour
         Vector3 axis, axis_t;
         if (IsAxisConstrained)
         {
-            Vector3 adjEnv0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            Vector3 adjEnv0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-            Vector3 adjEnv1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
-            Vector3 adjEnv1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
-            Vector3 G = adjEnv1 - adjEnv0;
-            Vector3 G_t = adjEnv1_t - adjEnv0_t;
-            // axis = adjEnv1 - adjEnv0 + GetAxisCorrectionAt(t);
-            axis = G + GetAxisCorrectionAt(t);
-            // axis_t = -Vector3.Cross(axis, G);
-            axis_t = G_t + GetAxisCorrectionDtAt(t);
+            Vector3 deltaX = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 deltaX_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 deltaX_tt = adjacentEnvelopeA1.GetEnvelopeDt2At(t, 0) - adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1);
+            Vector3 deltaX_hat_tt = MathUtility.NormalVectorDerivative2(deltaX, deltaX_t, deltaX_tt);
+            Vector3 deltaX_hat_t = MathUtility.NormalVectorDerivative(deltaX, deltaX_t);
+            Vector3 deltaX_hat = deltaX.normalized;
+            deltaX = deltaX_hat * Sqrt2;
+            deltaX_t = deltaX_hat_t * Sqrt2;
+            deltaX_tt = deltaX_hat_tt * Sqrt2;
+
+            // Values for defining the circle
+            Vector3 C = deltaX * 0.5f;
+            Vector3 C_t = deltaX_t * 0.5f;
+            float r = 1 / Sqrt2;
+
+            // Make orthonormal frame on plane with normal = deltaX_hat
+            Vector3 v = Vector3.up;
+            if (v == deltaX_hat) v = Vector3.right;
+            Vector3 w1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
+            Vector3 w1_t = v - (Vector3.Dot(v, deltaX_hat_t) * deltaX_hat + Vector3.Dot(v, deltaX_hat) * deltaX_hat_t);
+            w1_t = MathUtility.NormalVectorDerivative(w1, w1_t);
+            w1.Normalize();
+            Vector3 w2 = Vector3.Cross(deltaX_hat, w1);
+            Vector3 w2_t = Vector3.Cross(deltaX_hat_t, w1) + Vector3.Cross(deltaX_hat, w1_t);
+
+            // Finding point on circle
+            float A = Vector3.Dot(deltaX_t, w1);
+            float A_t = Vector3.Dot(deltaX_tt, w1) + Vector3.Dot(deltaX_t, w1_t);
+            float B = Vector3.Dot(deltaX_t, w2);
+            float B_t = Vector3.Dot(deltaX_tt, w2) + Vector3.Dot(deltaX_t, w2_t);
+
+            float phi = Mathf.Atan2(B, A);
+            float theta = phi - Mathf.Acos(r * Vector3.Dot(deltaX, deltaX_t) / Mathf.Sqrt(A * A + B * B));
+            float c_theta = Mathf.Cos(theta);
+            float s_theta = Mathf.Sin(theta);
+            float theta_t = (0.5f * (Vector3.Dot(deltaX_t, deltaX_t) + Vector3.Dot(deltaX, deltaX_tt)) - r * (-A_t * s_theta + B_t * c_theta)) / (r * (-A * s_theta + B * c_theta));
+
+            axis = C + r * (w1 * c_theta + w2 * s_theta);
+            axis_t = C_t + r * (w1_t * c_theta + w2_t * s_theta + theta_t * (w1 * -s_theta + w2 * c_theta));
             axis_t = MathUtility.NormalVectorDerivative(axis, axis_t);
         }
         else if (IsTangentContinuous)
@@ -608,11 +632,13 @@ public class Envelope : MonoBehaviour
             {
                 Vector3 x1x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 Vector3 x1x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+                x1x2_t = Sqrt2 * MathUtility.NormalVectorDerivative(x1x2, x1x2_t);
+                x1x2 = Sqrt2 * x1x2.normalized;
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(p, p + x1x2);
                 Gizmos.DrawLine(p, p + x1x2_t);
-                Gizmos.color = Color.white;
-                Gizmos.DrawLine(p, p + axis - aXat);
+                // Gizmos.color = Color.white;
+                // Gizmos.DrawLine(p, p + axis - aXat);
 
                 // Gizmos.color = Color.red;
                 // Gizmos.DrawLine(p, p + axis + GetAxisCorrectionAt(t));
@@ -665,7 +691,11 @@ public class Envelope : MonoBehaviour
                     Debug.LogWarning("Connect G0 debug");
                     Vector3 adj1_env_0 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
                     Vector3 adj1_env_t_0 = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
-                    Debug.Log(Vector3.Angle(adj1_env_0 - adj0_env_1, axis - aXat));
+                    Vector3 deltaX = adj1_env_0 - adj0_env_1;
+                    // deltaX = deltaX.normalized * Sqrt2;
+                    float a = deltaX.magnitude / Sqrt2;
+                    Debug.Log(a);
+                    Debug.Log(Vector3.Angle(adj1_env_0 - adj0_env_1, axis) + " Angle A(t) DeltaX(t)");
 
                     Debug.Log(Vector3.Angle(n0, axis) + " Angle n(t,0) A(t)");
                     Debug.Log(Vector3.Angle(n1, axis) + " Angle n(t,1) A(t)");
