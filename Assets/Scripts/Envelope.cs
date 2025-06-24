@@ -320,6 +320,8 @@ public class Envelope : MonoBehaviour
             float s_theta = Mathf.Sin(theta);
 
             axis = C + r * (w1 * c_theta + w2 * s_theta);
+
+            axis = C - r * Vector3.Cross(deltaX, deltaX_t).normalized;
         }
         else if (IsTangentContinuous)
         {
@@ -379,6 +381,8 @@ public class Envelope : MonoBehaviour
             axis = C + r * (w1 * c_theta + w2 * s_theta);
             axis_t = C_t + r * (w1_t * c_theta + w2_t * s_theta + theta_t * (w1 * -s_theta + w2 * c_theta));
             axis_t = MathUtility.NormalVectorDerivative(axis, axis_t);
+
+            axis_t = C_t - r * MathUtility.NormalVectorDerivative(Vector3.Cross(deltaX, deltaX_t), Vector3.Cross(deltaX_t, deltaX_t) + Vector3.Cross(deltaX, deltaX_tt));
         }
         else if (IsTangentContinuous)
         {
