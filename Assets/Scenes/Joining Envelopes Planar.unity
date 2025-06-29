@@ -255,13 +255,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 692fddbd771754cc4a44b0582cfbaf7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mesh: {fileID: 0}
+  filename: 
   sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: -1}
   toolAxisT1: {x: 0, y: 1, z: -1}
   tool: {fileID: 1730664634}
   adjacentEnvelopeA0: {fileID: 637717021}
-  adjacentEnvelopeA1: {fileID: 0}
+  adjacentEnvelopeA1: {fileID: 1785951851}
   tangentContinuity: 0
   toolAxisDegreeT0: 0
   toolAxisDegreeT1: 0
@@ -690,7 +690,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 692fddbd771754cc4a44b0582cfbaf7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mesh: {fileID: 0}
+  filename: 
   sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
@@ -1329,7 +1329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 692fddbd771754cc4a44b0582cfbaf7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mesh: {fileID: 0}
+  filename: 
   sphere: {fileID: 0}
   toolAxisT0: {x: 0, y: 1, z: 0}
   toolAxisT1: {x: 0, y: 1, z: 0}
