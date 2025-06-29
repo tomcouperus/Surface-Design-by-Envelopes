@@ -122,6 +122,11 @@ public class BezierCurve : MonoBehaviour
                points[segment * 3 + 3] * 6;
     }
 
+    public Vector3 EvaluateDerivative4Plus(float t)
+    {
+        return Vector3.zero;
+    }
+
     public void UpdateLineRenderer()
     {
         List<Vector3> renderPoints = new();
