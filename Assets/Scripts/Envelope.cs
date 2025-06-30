@@ -795,10 +795,11 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (Application.isPlaying)
         {
+            Vector3 origin = Vector3.zero;
             Vector3 p = GetToolPathAt(t);
             Vector3 pt = GetToolPathDtAt(t);
             Vector3 axis = GetToolAxisAt(t);
@@ -811,9 +812,9 @@ public class Envelope : MonoBehaviour
             Vector3 nt = CalculateNormalDtAt(t, a);
             // Axis
             Gizmos.color = Color.blue;
-            Gizmos.DrawLine(p, p + axis);
+            Gizmos.DrawLine(origin, axis);
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(p, p + axis_t);
+            Gizmos.DrawLine(origin, axis_t);
             // Gizmos.color = Color.magenta;
             // Gizmos.DrawLine(p, p + aXat);
 
@@ -846,17 +847,24 @@ public class Envelope : MonoBehaviour
 
             if (IsAxisConstrained)
             {
-                Vector3 x1x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-                Vector3 x1x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0) - adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+                Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                Vector3 x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+                Vector3 x1_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+                Vector3 x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+                Vector3 x1x2 = x2 - x1;
+                Vector3 x1x2_t = x2_t - x1_t;
                 Vector3 x1x2_cross_x1x2_t = Vector3.Cross(x1x2, x1x2_t);
                 // x1x2_t = Sqrt2 * MathUtility.NormalVectorDerivative(x1x2, x1x2_t);
                 // x1x2 = Sqrt2 * x1x2.normalized;
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawLine(p, p + x1x2);
-                Gizmos.DrawLine(p, p + x1x2_t);
-                Gizmos.DrawLine(p, p + x1x2_cross_x1x2_t);
+                Gizmos.DrawLine(origin, x1x2);
+                Gizmos.DrawLine(origin, x1x2_t);
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(p, p + x1_t);
+                Gizmos.DrawLine(p, p + x2_t);
+                // Gizmos.DrawLine(p, p + x1x2_cross_x1x2_t);
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(p + axis, p + axis + aXat);
+                Gizmos.DrawLine(axis, axis + aXat);
                 // Gizmos.color = Color.white;
                 // Gizmos.DrawLine(p, p + axis - aXat);
 
@@ -864,7 +872,6 @@ public class Envelope : MonoBehaviour
                 // Gizmos.DrawLine(p, p + axis + GetAxisCorrectionAt(t));
                 // Gizmos.DrawLine(p, p + axis_t + GetAxisCorrectionDtAt(t));
             }
-
         }
     }
 
