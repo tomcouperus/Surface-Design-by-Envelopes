@@ -793,7 +793,7 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (Application.isPlaying)
         {
@@ -812,15 +812,15 @@ public class Envelope : MonoBehaviour
             Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis);
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(p, p + axis_t);
+            // Gizmos.DrawLine(p, p + axis_t);
             // Gizmos.color = Color.magenta;
             // Gizmos.DrawLine(p, p + aXat);
 
             // Normal
             Gizmos.color = Color.green;
-            Gizmos.DrawLine(s, s + n);
+            // Gizmos.DrawLine(s, s + n);
             Gizmos.color = Color.magenta;
-            Gizmos.DrawLine(s, s + nt);
+            // Gizmos.DrawLine(s, s + nt);
 
             // Cross products
             Gizmos.color = Color.black;
@@ -838,7 +838,7 @@ public class Envelope : MonoBehaviour
                 Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
                 float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
                 Gizmos.color = Color.black;
-                Gizmos.DrawLine(p, p + pt);
+                // Gizmos.DrawLine(p, p + pt);
 
 
             }
@@ -856,13 +856,13 @@ public class Envelope : MonoBehaviour
                 // x1x2 = Sqrt2 * x1x2.normalized;
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(p, p + x1x2);
-                Gizmos.DrawLine(p, p + x1x2_t);
+                // Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.red;
-                Gizmos.DrawLine(p, p + x1_t);
-                Gizmos.DrawLine(p, p + x2_t);
+                // Gizmos.DrawLine(p, p + x1_t);
+                // Gizmos.DrawLine(p, p + x2_t);
                 // Gizmos.DrawLine(p, p + x1x2_cross_x1x2_t);
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(axis, axis + aXat);
+                // Gizmos.DrawLine(axis, axis + aXat);
                 // Gizmos.color = Color.white;
                 // Gizmos.DrawLine(p, p + axis - aXat);
 
