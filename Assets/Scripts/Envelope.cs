@@ -239,8 +239,6 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolPathDt2At(float t)
     {
-        // Need to check if these are required for chaining position continuous envelopes
-        // TODO it is!
         if (IsTangentContinuous)
         {
             return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
@@ -795,7 +793,7 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         if (Application.isPlaying)
         {
@@ -812,9 +810,9 @@ public class Envelope : MonoBehaviour
             Vector3 nt = CalculateNormalDtAt(t, a);
             // Axis
             Gizmos.color = Color.blue;
-            Gizmos.DrawLine(origin, axis);
+            Gizmos.DrawLine(p, p + axis);
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(origin, axis_t);
+            Gizmos.DrawLine(p, p + axis_t);
             // Gizmos.color = Color.magenta;
             // Gizmos.DrawLine(p, p + aXat);
 
@@ -857,8 +855,8 @@ public class Envelope : MonoBehaviour
                 // x1x2_t = Sqrt2 * MathUtility.NormalVectorDerivative(x1x2, x1x2_t);
                 // x1x2 = Sqrt2 * x1x2.normalized;
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawLine(origin, x1x2);
-                Gizmos.DrawLine(origin, x1x2_t);
+                Gizmos.DrawLine(p, p + x1x2);
+                Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.red;
                 Gizmos.DrawLine(p, p + x1_t);
                 Gizmos.DrawLine(p, p + x2_t);
