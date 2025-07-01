@@ -151,6 +151,6 @@ public class MathUtility
         Vector3 h = L8 * dg - g * dL8;
         Vector3 ddddb = h / L16;
 
-        return dddb;
+        return ddddb;
     }
 }
