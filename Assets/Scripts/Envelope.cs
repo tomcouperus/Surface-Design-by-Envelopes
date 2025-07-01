@@ -210,7 +210,7 @@ public class Envelope : MonoBehaviour
             Vector3 p = Vector3.up;
             if (p == v) p = Vector3.right;
             Vector3 w1 = p - Vector3.Dot(p, v) * v;
-            Vector3 w1_t = p - (Vector3.Dot(p, v) * v_t + Vector3.Dot(p, v_t) * v);
+            Vector3 w1_t = -(Vector3.Dot(p, v) * v_t + Vector3.Dot(p, v_t) * v);
             w1_t = MathUtility.NormalVectorDerivative(w1, w1_t);
             w1.Normalize();
             Vector3 w2 = Vector3.Cross(v, w1);
@@ -260,8 +260,8 @@ public class Envelope : MonoBehaviour
             Vector3 p = Vector3.up;
             if (p == v) p = Vector3.right;
             Vector3 w1 = p - Vector3.Dot(p, v) * v;
-            Vector3 w1_t = p - (Vector3.Dot(p, v_t) * v + Vector3.Dot(p, v) * v_t);
-            Vector3 w1_tt = p - (Vector3.Dot(p, v_tt) * v + 2 * Vector3.Dot(p, v_t) * v_t + Vector3.Dot(p, v) * v_tt);
+            Vector3 w1_t = -(Vector3.Dot(p, v_t) * v + Vector3.Dot(p, v) * v_t);
+            Vector3 w1_tt = -(Vector3.Dot(p, v_tt) * v + 2 * Vector3.Dot(p, v_t) * v_t + Vector3.Dot(p, v) * v_tt);
             w1_tt = MathUtility.NormalVectorDerivative2(w1, w1_t, w1_tt);
             w1_t = MathUtility.NormalVectorDerivative(w1, w1_t);
             w1.Normalize();
@@ -543,7 +543,9 @@ public class Envelope : MonoBehaviour
 
         float alpha = -m11 * ra;
         float beta = -m21 * ra;
-        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+
+        float sqrt_term = 1 - ra * ra * m11;
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(sqrt_term);
 
         Vector3 n = alpha * sa + beta * st + gamma * sNormal;
         return n.normalized;
@@ -571,15 +573,19 @@ public class Envelope : MonoBehaviour
 
         float m11 = G / EG_FF;
         float m11_t = (EG_FF * Gt - G * EG_FF_t) / (EG_FF * EG_FF);
+
         float m21 = -F / EG_FF;
         float m21_t = -(EG_FF * Ft - F * EG_FF_t) / (EG_FF * EG_FF);
 
         float alpha = -m11 * ra;
         float alpha_t = -m11_t * ra;
+
         float beta = -m21 * ra;
         float beta_t = -m21_t * ra;
-        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
-        float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(1 - ra * ra * m11));
+
+        float sqrt_term = 1 - ra * ra * m11;
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(sqrt_term);
+        float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(sqrt_term));
 
         Vector3 n = alpha * sa + beta * st + gamma * sNormal;
         Vector3 nt = alpha * sat + alpha_t * sa + beta * stt + beta_t * st + gamma * sNormal_t + gamma_t * sNormal;
@@ -605,38 +611,48 @@ public class Envelope : MonoBehaviour
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
-        float Ett = 2 * (Vector3.Dot(sat, sat) + Vector3.Dot(sa, satt));
+        float Ett = 2 * Vector3.Dot(sat, sat) + 2 * Vector3.Dot(sa, satt);
         float F = Vector3.Dot(sa, st);
         float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
-        float Ftt = Vector3.Dot(satt, st) + Vector3.Dot(sat, stt) + Vector3.Dot(sat, stt) + Vector3.Dot(sa, sttt);
+        float Ftt = Vector3.Dot(satt, st) + 2 * Vector3.Dot(sat, stt) + Vector3.Dot(sa, sttt);
         float G = Vector3.Dot(st, st);
         float Gt = 2 * Vector3.Dot(st, stt);
-        float Gtt = 2 * (Vector3.Dot(stt, stt) + Vector3.Dot(st, sttt));
+        float Gtt = 2 * Vector3.Dot(stt, stt) + 2 * Vector3.Dot(st, sttt);
         float EG_FF = E * G - F * F;
         float EG_FF_2 = EG_FF * EG_FF;
+        float EG_FF_3 = EG_FF * EG_FF * EG_FF;
         float EG_FF_t = Et * G + E * Gt - 2 * F * Ft;
-        float EG_FF_2_t = 2 * EG_FF * EG_FF_t;
-        float EG_FF_tt = Ett * G + Et * Gt + Et * Gt + E * Gtt - 2 * (Ft * Ft + F * Ftt);
+        float EG_FF_tt = Ett * G + 2 * Et * Gt + E * Gtt - 2 * (Ft * Ft + F * Ftt);
 
         float m11 = G / EG_FF;
         float m11_t = (EG_FF * Gt - G * EG_FF_t) / EG_FF_2;
-        float m11_tt = (EG_FF_2 * ((EG_FF_t * Gt + EG_FF * Gtt) - (Gt * EG_FF_t + G * EG_FF_tt)) - (EG_FF * Gt - G * EG_FF_t) * EG_FF_2_t) / (EG_FF_2 * EG_FF_2);
+        float m11_tt = (Gtt * EG_FF_2 -
+                        2 * Gt * EG_FF_t * EG_FF -
+                        G * EG_FF * EG_FF_tt +
+                        2 * G * EG_FF_t * EG_FF_t) / EG_FF_3;
+
         float m21 = -F / EG_FF;
         float m21_t = -(EG_FF * Ft - F * EG_FF_t) / EG_FF_2;
-        float m21_tt = -(EG_FF_2 * ((EG_FF_t * Ft + EG_FF * Ftt) - (Ft * EG_FF_t + F * EG_FF_tt)) - (EG_FF * Ft - F * EG_FF_t) * EG_FF_2_t) / (EG_FF_2 * EG_FF_2);
+        float m21_tt = -(Ftt * EG_FF_2 -
+                        2 * Ft * EG_FF_t * EG_FF -
+                        F * EG_FF * EG_FF_tt +
+                        2 * F * EG_FF_t * EG_FF_t) / EG_FF_3;
 
         float alpha = -m11 * ra;
         float alpha_t = -m11_t * ra;
         float alpha_tt = -m11_tt * ra;
+
         float beta = -m21 * ra;
         float beta_t = -m21_t * ra;
         float beta_tt = -m21_tt * ra;
-        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
-        float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(1 - ra * ra * m11));
+
+        float sqrt_term = 1 - ra * ra * m11;
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(sqrt_term);
+        float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(sqrt_term));
         float gamma_tt = (EG_FF > 0 ? 1 : -1) *
                          -ra * ra / 2 *
-                         (m11_tt / Mathf.Sqrt(1 - ra * ra * m11) +
-                         (ra * ra * m11_t * m11_t) / (2 * Mathf.Pow(1 - ra * ra * m11, 1.5f)));
+                         (m11_tt / Mathf.Sqrt(sqrt_term) +
+                         (ra * ra * m11_t * m11_t) / (2 * Mathf.Pow(sqrt_term, 1.5f)));
 
         Vector3 n = alpha * sa +
                     beta * st +
@@ -679,59 +695,64 @@ public class Envelope : MonoBehaviour
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
-        float Ett = 2 * (Vector3.Dot(sat, sat) + Vector3.Dot(sa, satt));
-        float Ettt = 2 * (Vector3.Dot(satt, sat) + 2 * Vector3.Dot(sat, satt) + Vector3.Dot(sa, sattt));
+        float Ett = 2 * Vector3.Dot(sat, sat) + 2 * Vector3.Dot(sa, satt);
+        float Ettt = 6 * Vector3.Dot(sat, satt) + 2 * Vector3.Dot(sa, sattt);
         float F = Vector3.Dot(sa, st);
         float Ft = Vector3.Dot(sat, st) + Vector3.Dot(sa, stt);
         float Ftt = Vector3.Dot(satt, st) + 2 * Vector3.Dot(sat, stt) + Vector3.Dot(sa, sttt);
         float Fttt = Vector3.Dot(sattt, st) + 3 * Vector3.Dot(satt, stt) + 3 * Vector3.Dot(sat, sttt) + Vector3.Dot(sa, stttt);
         float G = Vector3.Dot(st, st);
         float Gt = 2 * Vector3.Dot(st, stt);
-        float Gtt = 2 * (Vector3.Dot(stt, stt) + Vector3.Dot(st, sttt));
-        float Gttt = 2 * (Vector3.Dot(sttt, stt) + 2 * Vector3.Dot(stt, sttt) + Vector3.Dot(st, stttt));
+        float Gtt = 2 * Vector3.Dot(stt, stt) + 2 * Vector3.Dot(st, sttt);
+        float Gttt = 6 * Vector3.Dot(stt, sttt) + 2 * Vector3.Dot(st, stttt);
         float EG_FF = E * G - F * F;
+        float EG_FF_2 = EG_FF * EG_FF;
+        float EG_FF_3 = EG_FF * EG_FF * EG_FF;
+        float EG_FF_4 = EG_FF_2 * EG_FF_2;
         float EG_FF_t = Et * G + E * Gt - 2 * F * Ft;
         float EG_FF_tt = Ett * G + 2 * Et * Gt + E * Gtt - 2 * (Ft * Ft + F * Ftt);
-        float EG_FF_ttt = Ettt * G + 3 * Ett * Gt + 3 * Et * Gtt + E * Gttt - 2 * (2 * Ft * Ftt + Ft * Ftt + F * Fttt);
-        float EG_FF_2 = EG_FF * EG_FF;
-        float EG_FF_2_t = 2 * EG_FF * EG_FF_t;
-        float EG_FF_2_tt = 2 * (EG_FF_t * EG_FF_t + EG_FF_t * EG_FF_tt);
-        float EG_FF_4 = EG_FF_2 * EG_FF_2;
-        float EG_FF_4_t = 2 * EG_FF_2 * EG_FF_2_t;
-        float EG_FF_8 = EG_FF_4 * EG_FF_4;
+        float EG_FF_ttt = Ettt * G + 3 * Ett * Gt + 3 * Et * Gtt + E * Gttt - 2 * (3 * Ft * Ftt + F * Fttt);
 
         float m11 = G / EG_FF;
-        float i = EG_FF * Gt - EG_FF_t * G;
-        float m11_t = i / EG_FF_2;
-        float di = EG_FF * Gtt - EG_FF_tt * G;
-        float j = EG_FF_2 * di - EG_FF_2_t * i;
-        float m11_tt = j / EG_FF_4;
-        float ddi = (EG_FF_t * Gtt + EG_FF * Gttt) - (EG_FF_ttt * G + EG_FF_tt * Gt);
-        float dj = EG_FF_2 * ddi - EG_FF_2_tt * i;
-        float k = EG_FF_4 * dj - j * EG_FF_4_t;
-        float m11_ttt = k / EG_FF_8;
+        float m11_t = (EG_FF * Gt - G * EG_FF_t) / EG_FF_2;
+        float m11_tt = (Gtt * EG_FF_2 -
+                        2 * Gt * EG_FF_t * EG_FF -
+                        G * EG_FF * EG_FF_tt +
+                        2 * G * EG_FF_t * EG_FF_t) / EG_FF_3;
+        float m11_ttt = (Gttt * EG_FF_3 -
+                        3 * Gtt * EG_FF_t * EG_FF_2 -
+                        3 * Gt * EG_FF_tt * EG_FF_2 +
+                        6 * Gt * EG_FF * EG_FF_t * EG_FF_t +
+                        6 * G * EG_FF_tt * EG_FF_t * EG_FF -
+                        G * EG_FF_t * EG_FF_2 -
+                        6 * G * EG_FF_t * EG_FF_t * EG_FF_t) / EG_FF_4;
 
         float m21 = -F / EG_FF;
-        float u = EG_FF * Ft - F * EG_FF_t;
-        float m21_t = -u / EG_FF_2;
-        float du = EG_FF * Ftt - F * EG_FF_tt;
-        float v = EG_FF_2 * du - u * EG_FF_2_t;
-        float m21_tt = -v / EG_FF_4;
-        float ddu = (EG_FF_t * Ftt + EG_FF * Fttt) - (Ft * EG_FF_tt + F * EG_FF_ttt);
-        float dv = EG_FF_2 * ddu - u * EG_FF_2_tt;
-        float w = EG_FF_4 * dv - v * EG_FF_4_t;
-        float m21_ttt = -w / EG_FF_8;
+        float m21_t = -(EG_FF * Ft - F * EG_FF_t) / EG_FF_2;
+        float m21_tt = -(Ftt * EG_FF_2 -
+                        2 * Ft * EG_FF_t * EG_FF -
+                        F * EG_FF * EG_FF_tt +
+                        2 * F * EG_FF_t * EG_FF_t) / EG_FF_3;
+        float m21_ttt = -(Fttt * EG_FF_3 -
+                        3 * Ftt * EG_FF_t * EG_FF_2 -
+                        3 * Ft * EG_FF_tt * EG_FF_2 +
+                        6 * Ft * EG_FF * EG_FF_t * EG_FF_t +
+                        6 * F * EG_FF_tt * EG_FF_t * EG_FF -
+                        F * EG_FF_t * EG_FF_2 -
+                        6 * F * EG_FF_t * EG_FF_t * EG_FF_t) / EG_FF_4;
 
         float alpha = -m11 * ra;
         float alpha_t = -m11_t * ra;
         float alpha_tt = -m11_tt * ra;
         float alpha_ttt = -m11_ttt * ra;
+
         float beta = -m21 * ra;
         float beta_t = -m21_t * ra;
         float beta_tt = -m21_tt * ra;
         float beta_ttt = -m21_ttt * ra;
+
         float sqrt_term = 1 - ra * ra * m11;
-        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(1 - ra * ra * m11);
+        float gamma = (EG_FF > 0 ? 1 : -1) * Mathf.Sqrt(sqrt_term);
         float gamma_t = (EG_FF > 0 ? 1 : -1) * -ra * ra * m11_t / (2 * Mathf.Sqrt(sqrt_term));
         float gamma_tt = (EG_FF > 0 ? 1 : -1) *
                          -ra * ra / 2 *
@@ -755,17 +776,20 @@ public class Envelope : MonoBehaviour
                       2 * beta_t * stt +
                       beta_tt * st +
                       gamma * sNormal_tt +
-                      2 * +gamma_t * sNormal_t +
+                      2 * gamma_t * sNormal_t +
                       gamma_tt * sNormal;
-        Vector3 nttt = alpha_t * satt + alpha * sattt +
-                       2 * (alpha_tt * sat + alpha_t * satt) +
-                       alpha_ttt * sa + alpha_tt * sat +
-                       beta_t * sttt + beta * stttt +
-                       2 * (beta_tt * stt + beta_t * sttt) +
-                       beta_ttt * st + beta_tt * stt +
-                       gamma_t * sNormal_tt + gamma * sNormal_ttt +
-                       2 * (gamma_tt * sNormal_t + gamma_t * sNormal_tt) +
-                       gamma_ttt * sNormal + gamma_tt * sNormal_t;
+        Vector3 nttt = alpha * sattt +
+                       3 * alpha_t * satt +
+                       3 * alpha_tt * sat +
+                       alpha_ttt * sa +
+                       beta * stttt +
+                       3 * beta_t * sttt +
+                       3 * beta_tt * stt +
+                       beta_ttt * st +
+                       gamma * sNormal_ttt +
+                       3 * gamma_t * sNormal_tt +
+                       3 * gamma_tt * sNormal_t +
+                       gamma_ttt * sNormal;
         return MathUtility.NormalVectorDerivative3(n, nt, ntt, nttt);
     }
 
@@ -793,7 +817,7 @@ public class Envelope : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         if (Application.isPlaying)
         {
@@ -812,15 +836,15 @@ public class Envelope : MonoBehaviour
             Gizmos.color = Color.blue;
             Gizmos.DrawLine(p, p + axis);
             Gizmos.color = Color.cyan;
-            // Gizmos.DrawLine(p, p + axis_t);
+            Gizmos.DrawLine(p, p + axis_t);
             // Gizmos.color = Color.magenta;
             // Gizmos.DrawLine(p, p + aXat);
 
             // Normal
             Gizmos.color = Color.green;
-            // Gizmos.DrawLine(s, s + n);
+            Gizmos.DrawLine(s, s + n);
             Gizmos.color = Color.magenta;
-            // Gizmos.DrawLine(s, s + nt);
+            Gizmos.DrawLine(s, s + nt);
 
             // Cross products
             Gizmos.color = Color.black;
@@ -838,7 +862,7 @@ public class Envelope : MonoBehaviour
                 Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
                 float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
                 Gizmos.color = Color.black;
-                // Gizmos.DrawLine(p, p + pt);
+                Gizmos.DrawLine(p, p + pt);
 
 
             }
@@ -856,7 +880,7 @@ public class Envelope : MonoBehaviour
                 // x1x2 = Sqrt2 * x1x2.normalized;
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(p, p + x1x2);
-                // Gizmos.DrawLine(p, p + x1x2_t);
+                Gizmos.DrawLine(p, p + x1x2_t);
                 Gizmos.color = Color.red;
                 // Gizmos.DrawLine(p, p + x1_t);
                 // Gizmos.DrawLine(p, p + x2_t);
