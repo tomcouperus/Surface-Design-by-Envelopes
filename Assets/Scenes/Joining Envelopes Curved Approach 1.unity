@@ -1345,7 +1345,7 @@ MonoBehaviour:
   tSectors: 300
   aSectors: 80
   height: 1
-  radius: 0.5
+  radius: 1
   openingAngle: 0
 --- !u!33 &2013194747
 MeshFilter:

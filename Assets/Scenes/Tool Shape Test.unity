@@ -182,9 +182,6 @@ MonoBehaviour:
   tangentContinuity: 0
   toolAxisDegreeT0: 0
   toolAxisDegreeT1: 0
-  A_x_correction_poly: {x: 0, y: 0, z: 0, w: 0}
-  A_y_correction_poly: {x: 0, y: 0, z: 0, w: 0}
-  A_z_correction_poly: {x: 0, y: 0, z: 0, w: 0}
   tSectors: 100
   aSectors: 40
   t: 0.4
@@ -386,8 +383,7 @@ MonoBehaviour:
   aSectors: 40
   height: 1
   radius: 0.5
-  centreRadius: 0.999
-  a: 0
+  circleRadius: 4
 --- !u!33 &816806784
 MeshFilter:
   m_ObjectHideFlags: 0
