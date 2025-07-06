@@ -18,8 +18,6 @@ public abstract class Tool : MonoBehaviour
     [Header("Settings")]
     [SerializeField]
     protected float height = 1;
-    [SerializeField]
-    protected float radius = 0.5f;
 
 
     protected void Awake()

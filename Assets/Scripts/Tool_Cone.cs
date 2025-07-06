@@ -3,6 +3,8 @@ using UnityEngine;
 public class Tool_Cone : Tool
 {
     [SerializeField]
+    private float radius = 0.5f;
+    [SerializeField]
     [Range(0, 45)]
     private float openingAngle;
     private float OpeningRad { get { return Mathf.Deg2Rad * openingAngle; } }
