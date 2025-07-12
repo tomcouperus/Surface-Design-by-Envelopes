@@ -12,12 +12,14 @@ public class Tool_Drum : Tool
 
     private float GetAngleAt(float a)
     {
+        a = a * 2 - 1;
         float term = (a * height) / (2 * rho);
         return Mathf.Asin(term);
     }
 
     private float GetAngleDaAt(float a)
     {
+        a = a * 2 - 1;
         float term = (a * height) / (2 * rho);
         float term_a = height / (2 * rho);
         return term_a / Mathf.Sqrt(1 - term * term);
@@ -43,7 +45,7 @@ public class Tool_Drum : Tool
     public override float GetSphereCenterHeightAt(float a)
     {
         float theta = GetAngleAt(a);
-        return D * Mathf.Tan(theta);
+        return D * Mathf.Tan(theta) + height / 2;
     }
 
     public override float GetSphereCenterHeightDaAt(float a)
@@ -73,7 +75,7 @@ public class Tool_Drum : Tool
         float toolRad = GetRadiusAt(a);
         return new Vector3(
             toolRad * Mathf.Cos(tRad),
-            a * height / 2,
+            (a * 2 - 1) * height / 2 + height / 2,
             toolRad * Mathf.Sin(tRad)
         );
     }
