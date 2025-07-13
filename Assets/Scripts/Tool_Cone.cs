@@ -9,6 +9,16 @@ public class Tool_Cone : Tool
     private float openingAngle;
     private float OpeningRad { get { return Mathf.Deg2Rad * openingAngle; } }
 
+    public override float GetRadiusAt(float a)
+    {
+        return radius + a * height * Mathf.Tan(OpeningRad);
+    }
+
+    public override float GetRadiusDaAt(float a)
+    {
+        return height * Mathf.Tan(OpeningRad);
+    }
+
     public override float GetSphereCenterHeightAt(float a)
     {
         return a * height + GetRadiusAt(a) * Mathf.Tan(OpeningRad);
@@ -27,16 +37,6 @@ public class Tool_Cone : Tool
     public override float GetSphereRadiusDaAt(float a)
     {
         return GetRadiusDaAt(a) / Mathf.Cos(OpeningRad);
-    }
-
-    public override float GetRadiusAt(float a)
-    {
-        return radius + a * height * Mathf.Tan(OpeningRad);
-    }
-
-    public override float GetRadiusDaAt(float a)
-    {
-        return height * Mathf.Tan(OpeningRad);
     }
 
     protected override Vector3 GetToolSurfaceAt(float tRad, float a)
