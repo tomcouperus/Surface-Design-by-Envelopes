@@ -135,29 +135,29 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetEnvelopeAt(float t, float a)
     {
-        return GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t) + GetSphereRadiusAt(a) * CalculateNormalAt(t, a);
+        return GetToolPathAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisAt(t) + tool.GetSphereRadiusAt(a) * CalculateNormalAt(t, a);
     }
 
     public Vector3 GetEnvelopeDtAt(float t, float a)
     {
-        return GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t) + GetSphereRadiusAt(a) * CalculateNormalDtAt(t, a);
+        return GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t) + tool.GetSphereRadiusAt(a) * CalculateNormalDtAt(t, a);
     }
 
     public Vector3 GetEnvelopeDt2At(float t, float a)
     {
-        return GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t) + GetSphereRadiusAt(a) * CalculateNormalDt2At(t, a);
+        return GetToolPathDt2At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt2At(t) + tool.GetSphereRadiusAt(a) * CalculateNormalDt2At(t, a);
     }
 
     public Vector3 GetEnvelopeDt3At(float t, float a)
     {
-        return GetToolPathDt3At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt3At(t) + GetSphereRadiusAt(a) * CalculateNormalDt3At(t, a);
+        return GetToolPathDt3At(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDt3At(t) + tool.GetSphereRadiusAt(a) * CalculateNormalDt3At(t, a);
     }
 
     public Vector3 GetToolPathAt(float t)
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
+            return adjacentEnvelopeA0.GetEnvelopeAt(t, 1) - tool.GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -166,7 +166,7 @@ public class Envelope : MonoBehaviour
             Vector3 adjEnv = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
             Vector3 axis = GetToolAxisAt(t);
-            float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+            float dotValue = -tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
 
             // MATH
             Vector3 v = adjEnv_t.normalized;
@@ -194,7 +194,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
+            return adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1) - tool.GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDtAt(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDtAt(t);
         }
         else if (IsPositionContinuous)
         {
@@ -202,7 +202,7 @@ public class Envelope : MonoBehaviour
             Vector3 axis_t = GetToolAxisDtAt(t); // derivative of unit vector
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1); // not yet unit vector
             Vector3 adjEnv_tt = adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1); // not yet derivative of unit vector
-            float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+            float dotValue = -tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
 
             // MATH
             Vector3 v = adjEnv_t.normalized;
@@ -241,7 +241,7 @@ public class Envelope : MonoBehaviour
     {
         if (IsTangentContinuous)
         {
-            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
+            return adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1) - tool.GetSphereRadiusAt(0) * adjacentEnvelopeA0.CalculateNormalDt2At(t, 1) - tool.GetSphereCenterHeightAt(0) * GetToolAxisDt2At(t);
         }
         else if (IsPositionContinuous)
         {
@@ -251,7 +251,7 @@ public class Envelope : MonoBehaviour
             Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1); // not yet unit vector
             Vector3 adjEnv_tt = adjacentEnvelopeA0.GetEnvelopeDt2At(t, 1); // not yet derivative of unit vector
             Vector3 adjEnv_ttt = adjacentEnvelopeA0.GetEnvelopeDt3At(t, 1); // not yet derivative of unit vector
-            float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+            float dotValue = -tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
 
             // MATH
             Vector3 v = adjEnv_t.normalized;
@@ -319,16 +319,6 @@ public class Envelope : MonoBehaviour
         return toolPath.EvaluateDerivative4Plus(t);
     }
 
-    public float GetSphereRadiusAt(float a)
-    {
-        return tool.GetSphereRadiusAt(a);
-    }
-
-    public float GetSphereRadiusDaAt(float a)
-    {
-        return tool.GetSphereRadiusDaAt(a);
-    }
-
     /// <summary>
     /// Calculates a quaternion that rotates the axis of the constraining envelope in such a way to achieve tangent continuity for this envelope.
     /// </summary>
@@ -344,7 +334,7 @@ public class Envelope : MonoBehaviour
         Quaternion rotationFrame = Quaternion.FromToRotation(adjAxis, adjNormal);
 
         // Then rotate w.r.t. tangent continuity. Which rotates around the cross product of the adjacent normal and axis
-        float degrees = Mathf.Rad2Deg * Mathf.Acos(-GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0));
+        float degrees = Mathf.Rad2Deg * Mathf.Acos(-tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0));
         Vector3 rotationAxis = Vector3.Cross(adjNormal, adjAxis);
         Quaternion rotationTangent = Quaternion.AngleAxis(degrees, rotationAxis);
 
@@ -583,7 +573,7 @@ public class Envelope : MonoBehaviour
         Vector3 st = GetToolPathDtAt(t) + tool.GetSphereCenterHeightAt(a) * GetToolAxisDtAt(t);
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
 
-        float ra = GetSphereRadiusDaAt(a);
+        float ra = tool.GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float F = Vector3.Dot(sa, st);
@@ -612,7 +602,7 @@ public class Envelope : MonoBehaviour
         Vector3 sNormal = Vector3.Cross(sa, st).normalized;
         Vector3 sNormal_t = MathUtility.NormalVectorDerivative(Vector3.Cross(sa, st), Vector3.Cross(sat, st) + Vector3.Cross(sa, stt));
 
-        float ra = GetSphereRadiusDaAt(a);
+        float ra = tool.GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
@@ -659,7 +649,7 @@ public class Envelope : MonoBehaviour
         sNormal_t = MathUtility.NormalVectorDerivative(sNormal, sNormal_t);
         sNormal.Normalize();
 
-        float ra = GetSphereRadiusDaAt(a);
+        float ra = tool.GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
@@ -743,7 +733,7 @@ public class Envelope : MonoBehaviour
         sNormal_t = MathUtility.NormalVectorDerivative(sNormal, sNormal_t);
         sNormal.Normalize();
 
-        float ra = GetSphereRadiusDaAt(a);
+        float ra = tool.GetSphereRadiusDaAt(a);
 
         float E = Vector3.Dot(sa, sa);
         float Et = 2 * Vector3.Dot(sa, sat);
@@ -1026,7 +1016,7 @@ public class Envelope : MonoBehaviour
                 Vector3 adjN_1 = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
                 Vector3 adjEnv = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 Vector3 adjEnv_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-                float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+                float dotValue = -tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
                 Gizmos.color = Color.black;
                 Gizmos.DrawLine(p, p + pt);
 
@@ -1121,7 +1111,7 @@ public class Envelope : MonoBehaviour
                 Vector3 adj0_env_1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
                 Vector3 adj0_env_t_1 = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
 
-                float dotValue = -GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
+                float dotValue = -tool.GetSphereRadiusDaAt(0) / tool.GetSphereCenterHeightDaAt(0);
                 // Debug.LogWarning("G0 debug");
                 // Debug.Log(axis + " A(t)");
                 // Debug.Log(adj0_env_t_1.normalized + " X_1t(t,a)");
