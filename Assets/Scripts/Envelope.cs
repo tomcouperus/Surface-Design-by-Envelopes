@@ -520,6 +520,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDt2At(float t)
     {
+        // TODO: for now the axis constrained case only works once. If the tool isn't big enough, chaining constrained envelopes together won't work as it needs higher the higher derivatives of the envelope and normal.
         Vector3 axis, axis_t, axis_tt;
         if (IsTangentContinuous)
         {
@@ -537,7 +538,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDt3At(float t)
     {
-        // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
+        // TODO: for now the axis constrained case only works once. If the tool isn't big enough, chaining constrained envelopes together won't work as it needs higher the higher derivatives of the envelope and normal.
         Vector3 axis, axis_t, axis_tt, axis_ttt;
         if (IsTangentContinuous)
         {
@@ -556,7 +557,7 @@ public class Envelope : MonoBehaviour
 
     public Vector3 GetToolAxisDt4At(float t)
     {
-        // TODO should find a solution for the axis constrained and tangent continuous cases. For now works, but only in narrow cases.
+        // TODO: for now the axis constrained case only works once. If the tool isn't big enough, chaining constrained envelopes together won't work as it needs higher the higher derivatives of the envelope and normal.
         Vector3 axis, axis_t, axis_tt, axis_ttt, axis_tttt;
         if (IsTangentContinuous)
         {
