@@ -229,7 +229,7 @@ public class Envelope : MonoBehaviour
 
             Vector3 normal_t = theta_t * (-s_theta * w1 + c_theta * w2) + c_theta * w1_t + s_theta * w2_t;
 
-            return adjEnv_t - tool.GetRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * axis_t;
+            return adjEnv_t - tool.GetSphereRadiusAt(0) * normal_t - tool.GetSphereCenterHeightAt(0) * axis_t;
         }
         else
         {
@@ -299,7 +299,7 @@ public class Envelope : MonoBehaviour
                                 theta_t * -s_theta * w1_t + c_theta * w1_tt +
                                 theta_t * c_theta * w2_t + s_theta * w2_tt;
 
-            return adjEnv_tt - tool.GetRadiusAt(0) * normal_tt - tool.GetSphereCenterHeightAt(0) * axis_tt;
+            return adjEnv_tt - tool.GetSphereRadiusAt(0) * normal_tt - tool.GetSphereCenterHeightAt(0) * axis_tt;
         }
         else
         {
@@ -349,15 +349,15 @@ public class Envelope : MonoBehaviour
         Vector3 axis;
         if (IsAxisConstrained)
         {
-            Vector3 x1 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-            Vector3 x2 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
-            Vector3 deltaX = x2 - x1;
+            Vector3 x0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+            Vector3 x1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+            Vector3 deltaX = x1 - x0;
             Vector3 deltaX_hat = deltaX.normalized;
 
-            Vector3 x1_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-            Vector3 x2_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+            Vector3 x0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+            Vector3 x1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+            Vector3 x0_t_hat = x0_t.normalized;
             Vector3 x1_t_hat = x1_t.normalized;
-            Vector3 x2_t_hat = x2_t.normalized;
 
             // The following method only works when Delta X can be made with a cylinder of hight and radius of 1, where x1 lies on the bottom ring of the cylinder and x2 on the top ring.
 
@@ -377,17 +377,17 @@ public class Envelope : MonoBehaviour
             // The normals at x1 and x2 are perpendicular to the respective time derivates, as well as the axis.
             // This means each normal is the cross product of the time derivative and the axis (which is split in the parallel and perpendicular part).
             // This eventually leads to the form A*cos(phi) + B*sin(phi)=C, where A, B, and C are all coplanar vectors (by construction), which is the only reason this works.
-            Vector3 A = v1 - Vector3.Cross(x2_t_hat, v1) + Vector3.Cross(x1_t_hat, v1);
-            Vector3 B = v2 - Vector3.Cross(x2_t_hat, v2) + Vector3.Cross(x1_t_hat, v2);
-            Vector3 C = deltaX + Vector3.Cross(x2_t_hat, axis_par_deltaX) - Vector3.Cross(x1_t_hat, axis_par_deltaX) - axis_par_deltaX;
+            Vector3 D = v1 - Vector3.Cross(x1_t_hat, v1) + Vector3.Cross(x0_t_hat, v1);
+            Vector3 E = v2 - Vector3.Cross(x1_t_hat, v2) + Vector3.Cross(x0_t_hat, v2);
+            Vector3 F = deltaX + Vector3.Cross(x1_t_hat, axis_par_deltaX) - Vector3.Cross(x0_t_hat, axis_par_deltaX) - axis_par_deltaX;
 
             // By using dot product we can find phi
-            float a = Vector3.Dot(A, A);
-            float b = Vector3.Dot(A, B);
-            float c = Vector3.Dot(B, B);
-            float d = Vector3.Dot(A, C);
-            float e = Vector3.Dot(B, C);
-            float phi = Mathf.Atan2(e * a - d * b, d * c - e * b);
+            float h = Vector3.Dot(D, D);
+            float i = Vector3.Dot(D, E);
+            float j = Vector3.Dot(E, E);
+            float k = Vector3.Dot(D, F);
+            float l = Vector3.Dot(E, F);
+            float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
             float c_phi = Mathf.Cos(phi);
             float s_phi = Mathf.Sin(phi);
 
