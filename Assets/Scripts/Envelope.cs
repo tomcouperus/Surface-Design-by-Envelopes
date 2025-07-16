@@ -888,10 +888,10 @@ public class Envelope : MonoBehaviour
             Vector3 n0 = CalculateNormalAt(t, 0);
             Vector3 n1 = CalculateNormalAt(t, 1);
             Vector3 nt = CalculateNormalDtAt(t, a);
-            // Vector3 deltaX = x_at_1 - x_at_0;
-            // Vector3 deltaX_t = xt1 - xt0;
-            // Vector3 deltaX_hat = deltaX.normalized;
-            // Vector3 deltaX_hat_t = MathUtility.NormalVectorDerivative(deltaX, deltaX_t);
+            Vector3 deltaX = x_at_1 - x_at_0;
+            Vector3 deltaX_t = xt1 - xt0;
+            Vector3 deltaX_hat = deltaX.normalized;
+            Vector3 deltaX_hat_t = MathUtility.NormalVectorDerivative(deltaX, deltaX_t);
 
             // Axis
             Gizmos.color = Color.blue;
@@ -920,98 +920,99 @@ public class Envelope : MonoBehaviour
 
             Gizmos.color = Color.black;
             Gizmos.DrawLine(x_at_0, x_at_1);
-            // Gizmos.DrawLine(p, p + deltaX);
+            Gizmos.DrawLine(p, p + deltaX);
 
-            // float c_theta = 1.0f / deltaX.magnitude;
-            // float c_theta_t = -Vector3.Dot(deltaX, deltaX_t) / Mathf.Pow(deltaX.magnitude, 3);
-            // float s_theta = Mathf.Sqrt(1 - c_theta * c_theta);
-            // float s_theta_t = -c_theta * c_theta_t / s_theta;
-            // if (s_theta == 0)
-            // {
-            //     s_theta_t = 0;
-            // }
-            // Vector3 axis_par_deltaX = c_theta * deltaX_hat;
-            // Vector3 axis_par_deltaX_t = c_theta_t * deltaX_hat + c_theta * deltaX_hat_t;
+            float c_theta = 1.0f / deltaX.magnitude;
+            float c_theta_t = -Vector3.Dot(deltaX, deltaX_t) / Mathf.Pow(deltaX.magnitude, 3);
+            float s_theta = Mathf.Sqrt(1 - c_theta * c_theta);
+            float s_theta_t = -c_theta * c_theta_t / s_theta;
+            if (s_theta == 0)
+            {
+                s_theta_t = 0;
+            }
+            Vector3 axis_par_deltaX = c_theta * deltaX_hat;
+            Vector3 axis_par_deltaX_t = c_theta_t * deltaX_hat + c_theta * deltaX_hat_t;
 
-            // Gizmos.color = Color.blue;
-            // Gizmos.DrawLine(p, p + axis_par_deltaX);
-            // Gizmos.color = Color.cyan;
-            // Gizmos.DrawLine(p, p + axis_par_deltaX_t);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(p, p + axis_par_deltaX);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(p, p + axis_par_deltaX_t);
 
-            // Vector3 v = Vector3.up;
-            // if (v == deltaX_hat) v = Vector3.right;
-            // Vector3 v1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
-            // Vector3 v1_t = -(Vector3.Dot(v, deltaX_hat_t) * deltaX_hat + Vector3.Dot(v, deltaX_hat) * deltaX_hat_t);
-            // v1_t = s_theta_t * v1.normalized + s_theta * MathUtility.NormalVectorDerivative(v1, v1_t);
-            // v1 = s_theta * v1.normalized;
-            // Vector3 v2 = Vector3.Cross(deltaX_hat, v1);
-            // Vector3 v2_t = Vector3.Cross(deltaX_hat_t, v1) + Vector3.Cross(deltaX_hat, v1_t);
+            Vector3 v = Vector3.up;
+            if (v == deltaX_hat) v = Vector3.right;
+            Vector3 v1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
+            Vector3 v1_t = -(Vector3.Dot(v, deltaX_hat_t) * deltaX_hat + Vector3.Dot(v, deltaX_hat) * deltaX_hat_t);
+            v1_t = s_theta_t * v1.normalized + s_theta * MathUtility.NormalVectorDerivative(v1, v1_t);
+            v1 = s_theta * v1.normalized;
+            Vector3 v2 = Vector3.Cross(deltaX_hat, v1);
+            Vector3 v2_t = Vector3.Cross(deltaX_hat_t, v1) + Vector3.Cross(deltaX_hat, v1_t);
 
-            // Gizmos.color = Color.yellow;
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + v1);
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + v2);
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + v1_t);
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + v2_t);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + v1);
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + v2);
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + v1_t);
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + v2_t);
 
-            // Vector3 D = v1 - Vector3.Cross(xt1_hat, v1) + Vector3.Cross(xt0_hat, v1);
-            // Vector3 D_t = v1_t -
-            //               (Vector3.Cross(xt1_hat_t, v1) + Vector3.Cross(xt1_hat, v1_t)) +
-            //               (Vector3.Cross(xt0_hat_t, v1) + Vector3.Cross(xt0_hat, v1_t));
-            // Vector3 E = v2 - Vector3.Cross(xt1_hat, v2) + Vector3.Cross(xt0_hat, v2);
-            // Vector3 E_t = v2_t -
-            //               (Vector3.Cross(xt1_hat_t, v2) + Vector3.Cross(xt1_hat, v2_t)) +
-            //               (Vector3.Cross(xt0_hat_t, v2) + Vector3.Cross(xt0_hat, v2_t));
-            // Vector3 F = deltaX + Vector3.Cross(xt1_hat, axis_par_deltaX) - Vector3.Cross(xt0_hat, axis_par_deltaX) - axis_par_deltaX;
-            // Vector3 F_t = deltaX_t +
-            //               (Vector3.Cross(xt1_hat_t, axis_par_deltaX) + Vector3.Cross(xt1_hat, axis_par_deltaX_t)) -
-            //               (Vector3.Cross(xt0_hat_t, axis_par_deltaX) + Vector3.Cross(xt0_hat, axis_par_deltaX_t)) -
-            //               axis_par_deltaX_t;
+            Vector3 D = v1 - Vector3.Cross(xt1_hat, v1) + Vector3.Cross(xt0_hat, v1);
+            Vector3 D_t = v1_t -
+                          (Vector3.Cross(xt1_hat_t, v1) + Vector3.Cross(xt1_hat, v1_t)) +
+                          (Vector3.Cross(xt0_hat_t, v1) + Vector3.Cross(xt0_hat, v1_t));
+            Vector3 E = v2 - Vector3.Cross(xt1_hat, v2) + Vector3.Cross(xt0_hat, v2);
+            Vector3 E_t = v2_t -
+                          (Vector3.Cross(xt1_hat_t, v2) + Vector3.Cross(xt1_hat, v2_t)) +
+                          (Vector3.Cross(xt0_hat_t, v2) + Vector3.Cross(xt0_hat, v2_t));
+            Vector3 F = deltaX + Vector3.Cross(xt1_hat, axis_par_deltaX) - Vector3.Cross(xt0_hat, axis_par_deltaX) - axis_par_deltaX;
+            // F = F - Vector3.Dot(F, Vector3.Cross(D, E).normalized) * Vector3.Cross(D, E).normalized;
+            Vector3 F_t = deltaX_t +
+                          (Vector3.Cross(xt1_hat_t, axis_par_deltaX) + Vector3.Cross(xt1_hat, axis_par_deltaX_t)) -
+                          (Vector3.Cross(xt0_hat_t, axis_par_deltaX) + Vector3.Cross(xt0_hat, axis_par_deltaX_t)) -
+                          axis_par_deltaX_t;
 
-            // Gizmos.color = Color.red;
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + D);
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + D_t);
-            // Gizmos.color = Color.magenta;
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + E);
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + E_t);
-            // Gizmos.color = Color.gray;
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + F);
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + F_t);
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + D);
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + D_t);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + E);
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + E_t);
+            Gizmos.color = Color.gray;
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + F);
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + F_t);
 
-            // float h = Vector3.Dot(D, D);
-            // float i = Vector3.Dot(D, E);
-            // float j = Vector3.Dot(E, E);
-            // float k = Vector3.Dot(D, F);
-            // float l = Vector3.Dot(E, F);
-            // float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
-            // float c_phi = Mathf.Cos(phi);
-            // float s_phi = Mathf.Sin(phi);
+            float h = Vector3.Dot(D, D);
+            float i = Vector3.Dot(D, E);
+            float j = Vector3.Dot(E, E);
+            float k = Vector3.Dot(D, F);
+            float l = Vector3.Dot(E, F);
+            float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
+            float c_phi = Mathf.Cos(phi);
+            float s_phi = Mathf.Sin(phi);
 
-            // Vector3 helper = -D * s_phi + E * c_phi;
-            // float phi_t = Vector3.Dot(helper, F_t - D_t * c_phi - E_t * s_phi) / helper.sqrMagnitude;
-            // if (helper.sqrMagnitude == 0)
-            // {
-            //     phi_t = 0;
-            // }
+            Vector3 helper = -D * s_phi + E * c_phi;
+            float phi_t = Vector3.Dot(helper, F_t - D_t * c_phi - E_t * s_phi) / helper.sqrMagnitude;
+            if (helper.sqrMagnitude == 0)
+            {
+                phi_t = 0;
+            }
 
-            // Vector3 axis_perp_deltaX = v1 * c_phi + v2 * s_phi;
-            // Gizmos.color = Color.blue;
-            // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + axis_perp_deltaX);
-            // Vector3 axis_perp_deltaX_t = v1_t * c_phi + v1 * phi_t * -s_phi +
-            //                              v2_t * s_phi + v2 * phi_t * c_phi;
-            // Gizmos.color = Color.cyan;
-            // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + axis_perp_deltaX_t);
+            Vector3 axis_perp_deltaX = v1 * c_phi + v2 * s_phi;
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + axis_perp_deltaX);
+            Vector3 axis_perp_deltaX_t = v1_t * c_phi + v1 * phi_t * -s_phi +
+                                         v2_t * s_phi + v2 * phi_t * c_phi;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + axis_perp_deltaX_t);
 
-            // if (debugGizmos)
-            // {
-            //     Debug.Log(axis);
-            //     Debug.Log(Vector3.Angle(axis, deltaX) + " Angle A DeltaX");
-            //     Debug.Log(deltaX.sqrMagnitude + " ||DeltaX||");
-            //     Debug.Log((axis - (axis_par_deltaX + axis_perp_deltaX)).sqrMagnitude + " A error");
-            //     Debug.Log(phi_t);
-            //     Debug.Log((axis_t - (axis_par_deltaX_t + axis_perp_deltaX_t)).sqrMagnitude + " A' error");
-            //     Debug.Log(Vector3.Dot(F, Vector3.Cross(D, E)) + " Coplanar Check");
-            //     Debug.Log(deltaX.sqrMagnitude - axis_par_deltaX.sqrMagnitude);
-            // }
+            if (debugGizmos)
+            {
+                Debug.Log(axis);
+                Debug.Log(Vector3.Angle(axis, deltaX) + " Angle A DeltaX");
+                Debug.Log(deltaX.sqrMagnitude + " ||DeltaX||");
+                Debug.Log((axis - (axis_par_deltaX + axis_perp_deltaX)).sqrMagnitude + " A error");
+                Debug.Log(phi_t);
+                Debug.Log((axis_t - (axis_par_deltaX_t + axis_perp_deltaX_t)).sqrMagnitude + " A' error");
+                Debug.Log(Vector3.Dot(F, Vector3.Cross(D, E)) + " Coplanar Check");
+                Debug.Log(deltaX.sqrMagnitude - axis_par_deltaX.sqrMagnitude);
+            }
             if (IsPositionContinuous)
             {
                 Vector3 adjN_1 = adjacentEnvelopeA0.CalculateNormalAt(t, 1);
@@ -1026,69 +1027,69 @@ public class Envelope : MonoBehaviour
 
             if (IsAxisConstrained)
             {
-                Vector3 x0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
-                Vector3 x1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
-                Vector3 deltaX = x1 - x0;
-                Vector3 deltaX_hat = deltaX.normalized;
+                // Vector3 x0 = adjacentEnvelopeA0.GetEnvelopeAt(t, 1);
+                // Vector3 x1 = adjacentEnvelopeA1.GetEnvelopeAt(t, 0);
+                // Vector3 deltaX = x1 - x0;
+                // Vector3 deltaX_hat = deltaX.normalized;
 
-                Vector3 x0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
-                Vector3 x1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
-                Vector3 x0_t_hat = x0_t.normalized;
-                Vector3 x1_t_hat = x1_t.normalized;
+                // Vector3 x0_t = adjacentEnvelopeA0.GetEnvelopeDtAt(t, 1);
+                // Vector3 x1_t = adjacentEnvelopeA1.GetEnvelopeDtAt(t, 0);
+                // Vector3 x0_t_hat = x0_t.normalized;
+                // Vector3 x1_t_hat = x1_t.normalized;
 
-                // The following method only works when Delta X can be made with a cylinder of hight and radius of 1, where x1 lies on the bottom ring of the cylinder and x2 on the top ring.
+                // // The following method only works when Delta X can be made with a cylinder of hight and radius of 1, where x1 lies on the bottom ring of the cylinder and x2 on the top ring.
 
-                // Separately find the parts of the axis parallel and perpendicular to Delta X
-                // By utilizing Delta X dot A = 1 we can calculate the angle between Delta X and A
-                float c_theta = Mathf.Clamp(1.0f / deltaX.magnitude, -1, 1);
-                float s_theta = Mathf.Sqrt(1 - c_theta * c_theta);
-                Vector3 axis_par_deltaX = c_theta * deltaX_hat;
+                // // Separately find the parts of the axis parallel and perpendicular to Delta X
+                // // By utilizing Delta X dot A = 1 we can calculate the angle between Delta X and A
+                // float c_theta = Mathf.Clamp(1.0f / deltaX.magnitude, -1, 1);
+                // float s_theta = Mathf.Sqrt(1 - c_theta * c_theta);
+                // Vector3 axis_par_deltaX = c_theta * deltaX_hat;
 
-                // For the perpendicular part we make an orthonormal basis on the plane perpendicular to Delta X, with radius Sin(theta)
-                Vector3 v = Vector3.up;
-                if (v == deltaX_hat) v = Vector3.right;
-                Vector3 v1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
-                v1 = s_theta * v1.normalized;
-                Vector3 v2 = Vector3.Cross(deltaX_hat, v1);
+                // // For the perpendicular part we make an orthonormal basis on the plane perpendicular to Delta X, with radius Sin(theta)
+                // Vector3 v = Vector3.up;
+                // if (v == deltaX_hat) v = Vector3.right;
+                // Vector3 v1 = v - Vector3.Dot(v, deltaX_hat) * deltaX_hat;
+                // v1 = s_theta * v1.normalized;
+                // Vector3 v2 = Vector3.Cross(deltaX_hat, v1);
 
-                // The normals at x1 and x2 are perpendicular to the respective time derivates, as well as the axis.
-                // This means each normal is the cross product of the time derivative and the axis (which is split in the parallel and perpendicular part).
-                // This eventually leads to the form A*cos(phi) + B*sin(phi)=C, where A, B, and C are all coplanar vectors (by construction), which is the only reason this works.
-                Vector3 D = v1 - Vector3.Cross(x1_t_hat, v1) + Vector3.Cross(x0_t_hat, v1);
-                Vector3 E = v2 - Vector3.Cross(x1_t_hat, v2) + Vector3.Cross(x0_t_hat, v2);
-                Vector3 F = deltaX + Vector3.Cross(x1_t_hat, axis_par_deltaX) - Vector3.Cross(x0_t_hat, axis_par_deltaX) - axis_par_deltaX;
+                // // The normals at x1 and x2 are perpendicular to the respective time derivates, as well as the axis.
+                // // This means each normal is the cross product of the time derivative and the axis (which is split in the parallel and perpendicular part).
+                // // This eventually leads to the form A*cos(phi) + B*sin(phi)=C, where A, B, and C are all coplanar vectors (by construction), which is the only reason this works.
+                // Vector3 D = v1 - Vector3.Cross(x1_t_hat, v1) + Vector3.Cross(x0_t_hat, v1);
+                // Vector3 E = v2 - Vector3.Cross(x1_t_hat, v2) + Vector3.Cross(x0_t_hat, v2);
+                // Vector3 F = deltaX + Vector3.Cross(x1_t_hat, axis_par_deltaX) - Vector3.Cross(x0_t_hat, axis_par_deltaX) - axis_par_deltaX;
 
-                // By using dot product we can find phi
-                float h = Vector3.Dot(D, D);
-                float i = Vector3.Dot(D, E);
-                float j = Vector3.Dot(E, E);
-                float k = Vector3.Dot(D, F);
-                float l = Vector3.Dot(E, F);
-                float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
-                float c_phi = Mathf.Cos(phi);
-                float s_phi = Mathf.Sin(phi);
+                // // By using dot product we can find phi
+                // float h = Vector3.Dot(D, D);
+                // float i = Vector3.Dot(D, E);
+                // float j = Vector3.Dot(E, E);
+                // float k = Vector3.Dot(D, F);
+                // float l = Vector3.Dot(E, F);
+                // float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
+                // float c_phi = Mathf.Cos(phi);
+                // float s_phi = Mathf.Sin(phi);
 
-                Vector3 axis_perp_deltaX = v1 * c_phi + v2 * s_phi;
-                Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + axis_perp_deltaX);
+                // Vector3 axis_perp_deltaX = v1 * c_phi + v2 * s_phi;
+                // Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + axis_perp_deltaX);
 
-                if (debugGizmos)
-                {
-                    Debug.Log(x0 + " X0");
-                    Debug.Log(x1 + " X1");
-                    Debug.Log(deltaX + " deltaX");
-                    Debug.Log(phi + " phi");
-                    Debug.Log((l * h - k * i) + " y part of atan2");
-                    Debug.Log((k * j - l * i) + " x part of atan2");
-                    Debug.Log(D + " D");
-                    Debug.Log(E + " E");
-                    Debug.Log(F + " F");
-                    Debug.Log(v1 + " v1");
-                    Debug.Log((v - Vector3.Dot(v, deltaX_hat) * deltaX_hat) + " v1 unnormalized");
-                    Debug.Log((v - Vector3.Dot(v, deltaX_hat) * deltaX_hat).normalized + " v1 normalized");
-                    Debug.Log(s_theta + " sin(theta)");
-                    Debug.Log(c_theta + " cos(theta)");
-                    Debug.Log((1.0f / deltaX.magnitude));
-                }
+                // if (debugGizmos)
+                // {
+                //     Debug.Log(x0 + " X0");
+                //     Debug.Log(x1 + " X1");
+                //     Debug.Log(deltaX + " deltaX");
+                //     Debug.Log(phi + " phi");
+                //     Debug.Log((l * h - k * i) + " y part of atan2");
+                //     Debug.Log((k * j - l * i) + " x part of atan2");
+                //     Debug.Log(D + " D");
+                //     Debug.Log(E + " E");
+                //     Debug.Log(F + " F");
+                //     Debug.Log(v1 + " v1");
+                //     Debug.Log((v - Vector3.Dot(v, deltaX_hat) * deltaX_hat) + " v1 unnormalized");
+                //     Debug.Log((v - Vector3.Dot(v, deltaX_hat) * deltaX_hat).normalized + " v1 normalized");
+                //     Debug.Log(s_theta + " sin(theta)");
+                //     Debug.Log(c_theta + " cos(theta)");
+                //     Debug.Log((1.0f / deltaX.magnitude));
+                // }
             }
         }
         debugGizmos = false;
