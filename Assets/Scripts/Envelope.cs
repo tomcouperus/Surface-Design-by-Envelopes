@@ -9,7 +9,6 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class Envelope : MonoBehaviour
 {
-    public string filename;
     private Mesh mesh;
     [SerializeField]
     private GameObject sphere;
@@ -56,13 +55,6 @@ public class Envelope : MonoBehaviour
     public bool IsPositionContinuous { get { return adjacentEnvelopeA0 != null; } }
     public bool IsTangentContinuous { get { return IsPositionContinuous && tangentContinuity && !IsAxisConstrained; } }
     public bool IsAxisConstrained { get { return IsPositionContinuous && adjacentEnvelopeA1 != null; } }
-
-    static readonly float Sqrt2 = Mathf.Sqrt(2);
-
-    [Header("Test")]
-    [SerializeField]
-    [Range(-45, 45)]
-    private float correctionAngle = 0;
 
     private void Awake()
     {
@@ -985,14 +977,12 @@ public class Envelope : MonoBehaviour
             Gizmos.DrawLine(p + axis_par_deltaX, p + axis_par_deltaX + F);
             // Gizmos.DrawLine(p + axis_par_deltaX_t, p + axis_par_deltaX_t + F_t);
 
-            float correctionAngleRad = Mathf.Deg2Rad * correctionAngle;
-
             float h = Vector3.Dot(D, D);
             float i = Vector3.Dot(D, E);
             float j = Vector3.Dot(E, E);
             float k = Vector3.Dot(D, F);
             float l = Vector3.Dot(E, F);
-            float phi = Mathf.Atan2(l * h - k * i, k * j - l * i) + correctionAngleRad;
+            float phi = Mathf.Atan2(l * h - k * i, k * j - l * i);
             float c_phi = Mathf.Cos(phi);
             float s_phi = Mathf.Sin(phi);
 
