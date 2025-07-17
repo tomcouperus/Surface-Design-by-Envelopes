@@ -26,9 +26,5 @@ public class EnvelopeEditor : Editor
             envelope.UpdateEnvelope();
             envelope.tool.UpdateTool();
         }
-        if (GUILayout.Button("Test"))
-        {
-            envelope.ExportTestData();
-        }
     }
 }
