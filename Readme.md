@@ -1,6 +1,6 @@
 # Surface Design by Envelopes
 This project is an exploration of envelope surfaces, which are of great importance in the CNC industry.
-This repository is the prototype environment, as Unity lends itself easier to quick experimentation and vector visualization, compared to the [final product](https://github.com/tomcouperus/moving_cylinders) made in C++.
+This repository is the prototype environment described in this paper (To Be Published soon), as Unity lends itself easier to quick experimentation and vector visualization, compared to the [final product](https://github.com/tomcouperus/moving_cylinders) made in C++.
 
 Computer numerically controlled machining has been the leading subtractive manufacturing technique for decades. 
 It is used in the automotive, aeronautic, and electronic industries, among many others. Many of these industries require high precision and smoothness in the finishing stage of their products. 
